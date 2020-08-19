@@ -91,7 +91,7 @@ def replace_triangle_faces(points, triangle_nodes, triangle_faces):
     mask[:] = 1
     mask[np.unique(points_and_triangles["triangle"])] = 0
     
-    return points_and_nodes, triangle_faces[mask].append(pd.DataFrame(np.concatenate(all_new_faces))), leftover
+    return points_and_nodes, triangle_faces[mask].append(pd.DataFrame(np.concatenate(all_new_faces))).astype(int), leftover
 
 def clean_triangles(points, faces, decimals = 10, offset=False):
     points = points.copy()
