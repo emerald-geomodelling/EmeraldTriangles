@@ -65,9 +65,9 @@ def replace_triangle_faces(points, triangle_nodes, triangle_faces):
             leftover = group["point"] + points_start
             continue
         triangulation_points = np.append(P[group["point"]],
-                                            np.array((A[triangle],
-                                                         B[triangle],
-                                                         C[triangle])), axis=0)
+                                         np.array((A[triangle],
+                                                   B[triangle],
+                                                   C[triangle])), axis=0)
 
         # Normalization to get around floating point precision problem in scipy.spatial.Delaunay
         triangulation_points[:,0] -= triangulation_points[:,0].mean()
@@ -80,10 +80,10 @@ def replace_triangle_faces(points, triangle_nodes, triangle_faces):
                                                           triangle_faces.loc[triangle][1],
                                                           triangle_faces.loc[triangle][2])))
 
-        new_faces = np.zeros(triangulation.simplices.shape)
-        new_faces[:,0] = triangulation_point_indices[triangulation.simplices[:,0]]
-        new_faces[:,1] = triangulation_point_indices[triangulation.simplices[:,1]]
-        new_faces[:,2] = triangulation_point_indices[triangulation.simplices[:,2]]
+        new_faces = pd.concat([triangle_faces.iloc[triangle:triangle+1]]*len(triangulation.simplices))
+        new_faces[0] = triangulation_point_indices[triangulation.simplices[:,0]]
+        new_faces[1] = triangulation_point_indices[triangulation.simplices[:,1]]
+        new_faces[2] = triangulation_point_indices[triangulation.simplices[:,2]]
 
         all_new_faces.append(new_faces)
 
@@ -91,7 +91,7 @@ def replace_triangle_faces(points, triangle_nodes, triangle_faces):
     mask[:] = 1
     mask[np.unique(points_and_triangles["triangle"])] = 0
     
-    return points_and_nodes, triangle_faces[mask].append(pd.DataFrame(np.concatenate(all_new_faces))).astype(int), leftover
+    return points_and_nodes, triangle_faces[mask].append(pd.concat(all_new_faces)), leftover
 
 def clean_triangles(points, faces, decimals = 10, offset=False):
     points = points.copy()
@@ -146,7 +146,7 @@ def mesh_boundary(faces):
     
     return border_sides
 
-def mesh_boundary_mark_rings(border_sides):
+def _mesh_boundary_mark_rings(border_sides):
     border_sides = border_sides.copy()
     
     border_sides["ring"] = np.NaN
@@ -194,7 +194,9 @@ def mesh_boundary_mark_rings(border_sides):
             
     return border_sides
 
-def ring_marked_mesh_boundary_to_pointlists(border_sides):
+def mesh_boundary_to_pointlists(border_sides):
+    border_sides = _mesh_boundary_mark_rings(border_sides)
+    
     res = {}
     for ring in border_sides["ring"].unique():
         ringborders = border_sides[border_sides["ring"] == ring]
