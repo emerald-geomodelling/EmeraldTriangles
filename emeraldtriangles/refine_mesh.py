@@ -1,9 +1,11 @@
 import numpy as np
 import pandas as pd
 import scipy.spatial
+import triangle
 
 from . import cleanup
 from . import points_in_mesh
+from . import boundary
 
 def replace_triangle_faces(points, triangle_nodes, triangle_faces):
     triangle_nodes, triangle_faces = cleanup.reindex(triangle_nodes, triangle_faces)
@@ -51,3 +53,18 @@ def replace_triangle_faces(points, triangle_nodes, triangle_faces):
     mask[np.unique(points_and_triangles["triangle"])] = 0
     
     return points_and_nodes, triangle_faces[mask].append(pd.concat(all_new_faces)), leftover
+
+def supplant_triangle_faces(triangle_nodes, triangle_faces):
+    border_sides = boundary.mesh_boundary(triangle_faces)
+
+    tri = {
+        "vertices": triangle_nodes,
+        "segments": border_sides[[0, 1]].append(pd.DataFrame(
+            scipy.spatial.ConvexHull(triangle_nodes).simplices, columns=[0,1])),
+        "holes": (triangle_nodes.loc[triangle_faces[0]].values
+                  + triangle_nodes.loc[triangle_faces[1]].values
+                  + triangle_nodes.loc[triangle_faces[2]].values) / 3
+    }
+    return triangle.triangulate(tri, 'p')
+
+    
