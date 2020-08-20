@@ -47,8 +47,9 @@ def points_in_triangles(points, triangle_nodes, triangle_faces):
     return points_and_triangles
 
 def replace_triangle_faces(points, triangle_nodes, triangle_faces):
+    triangle_nodes, triangle_faces = reindex(triangle_nodes, triangle_faces)
     points_start = len(triangle_nodes)
-    points_and_nodes = triangle_nodes.append(points)
+    points_and_nodes = triangle_nodes.append(points).reset_index(drop=True)
 
     P = points[["X", "Y"]].values
     A = triangle_nodes.loc[triangle_faces[0].values][["X", "Y"]].values
@@ -56,13 +57,12 @@ def replace_triangle_faces(points, triangle_nodes, triangle_faces):
     C = triangle_nodes.loc[triangle_faces[2].values][["X", "Y"]].values
     
     points_and_triangles = points_in_triangles(points, triangle_nodes, triangle_faces)
-    points_and_triangles = points_and_triangles[points_and_triangles["triangle"] != -1]
     
     leftover = None
     all_new_faces = []
     for triangle, group in points_and_triangles.groupby("triangle"):
         if triangle == -1:
-            leftover = group
+            leftover = group["point"] + points_start
             continue
         triangulation_points = np.append(P[group["point"]],
                                             np.array((A[triangle],
