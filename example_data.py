@@ -64,3 +64,5 @@ triangles["facecolors"] = np.exp(-0.01 * ((xmid - x0) * (xmid - x0) + (ymid - y0
 
 vertices = pd.DataFrame(vertices, columns=["X", "Y"])
 vertices["color"] = 0.0
+
+tri = {"triangles": triangles, "vertices": vertices, "points": newpoints}

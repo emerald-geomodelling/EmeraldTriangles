@@ -26,7 +26,7 @@ def points_in_triangle(PS, A,B,C):
         yield bboxfilter[matches]
         
 
-def points_in_triangles(points, vertices, triangles):
+def points_in_triangles(points, vertices, triangles, **kw):
     """
     points: DataFrame with columns X and Y
     vertices: DataFrame with columns X and Y

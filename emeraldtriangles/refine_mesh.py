@@ -7,7 +7,7 @@ from . import cleanup
 from . import points_in_mesh
 from . import boundary
 
-def replace_triangles(points, vertices, triangles):
+def replace_triangles(points, vertices, triangles, **tri):
     vertices, triangles = cleanup.reindex(vertices, triangles)
     points_start = len(vertices)
     points_and_nodes = vertices.append(points).reset_index(drop=True)
@@ -51,12 +51,18 @@ def replace_triangles(points, vertices, triangles):
         new_faces[2] = triangulation_point_indices[triangulation.simplices[:,2]]        
         all_new_faces = all_new_faces.append(new_faces)
 
-    return points_and_nodes, all_new_faces, leftover
+    res = dict(tri)
+    res["vertices"] = points_and_nodes
+    res["triangles"] = all_new_faces
+    res["leftover"] = leftover
+    return res
 
-def supplant_triangles(vertices, triangles):
-    border_sides = boundary.mesh_boundary(triangles)
+def supplant_triangles(**tri):
+    tri = boundary.mesh_boundary(**tri)
 
+    vertices, triangles = tri["vertices"], tri["triangles"]
     trivertices = vertices[["X", "Y"]]
+    border_sides = tri["segments"]
     tri = {
         "vertices": trivertices,
         "segments": border_sides[[0, 1]].append(pd.DataFrame(
@@ -65,8 +71,8 @@ def supplant_triangles(vertices, triangles):
                   + trivertices.loc[triangles[1]].values
                   + trivertices.loc[triangles[2]].values) / 3
     }
-    res = triangle.triangulate(tri, 'p')
-
-    res["triangles"] = triangles.iloc[0:0].append(pd.DataFrame(res["triangles"]))
+    res = dict(tri)
+    res.update(triangle.triangulate(tri, 'p'))
+    res["triangles"] = triangles.append(triangles.iloc[0:0].append(pd.DataFrame(res["triangles"])))
     res["vertices"] = vertices
     return res

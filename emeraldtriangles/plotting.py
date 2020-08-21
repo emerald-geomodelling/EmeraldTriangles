@@ -32,6 +32,18 @@ def vertices(ax, **kw):
         vm = kw['vertex_markers']
         for i in range(verts.shape[0]):
             ax.text(verts[i, 0], verts[i, 1], str(vm[i]))
+
+def points(ax, **kw):
+    verts = kw['points'][["X", "Y"]].values
+
+    args = {}
+    if "color" in kw['points'].columns:
+        args["c"] = kw['points']["color"].values
+    else:
+        args["c"] = np.zeros(len(kw['points']))
+
+    ax.scatter(kw['points']["X"], kw['points']["Y"], cmap="spring", **args)
+
             
 def plot(ax, **kw):
     kworig = dict(kw)
@@ -39,9 +51,13 @@ def plot(ax, **kw):
         kw["triangles"] = kw["triangles"][[0, 1, 2]].values
     if isinstance(kw.get("vertices"), pd.core.frame.DataFrame):
         kw["vertices"] = kw["vertices"][["X", "Y"]].values
+    if isinstance(kw.get("segments"), pd.core.frame.DataFrame):
+        kw["segments"] = kw["segments"][[0, 1]].values
     
     ax.axes.set_aspect('equal')
     vertices(ax, **kworig)
+    if "points" in kw:
+        points(ax, **kworig)
     if 'segments' in kw:
         plotmod.segments(ax, **kw)
     if 'triangles' in kw:
