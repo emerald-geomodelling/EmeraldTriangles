@@ -12,3 +12,6 @@ This library provides transformations for triangle meshes built on top of [scipy
   
 This library uses a similar data structure to the Triangles library above, but replaces numpy arrays with pandas dataframes, preserving any extra columns across operations. It also contains a plotting function similar to the one in the Triangle library, that supports color attributes for vertices as well as triangle faces.
 
+# Documentation
+
+Documentation is provided in the form of a [jupyter notebook with example usages](https://github.com/EMeraldGeo/EmeraldTriangles/blob/master/Example%20usage.ipynb) as well as in docstrings accesible with the python help() function.
