@@ -1,5 +1,7 @@
 # EmeraldTriangles
 
+<img src="example.png" align="right">
+
 This library provides transformations for triangle meshes build on top of [scipy.spatial.Delaunay](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.Delaunay.html) and [Triangle](https://rufat.be/triangle/):
 
   * Insert points (nodes) in an existing mesh, splitting any triangles that points fall into.
