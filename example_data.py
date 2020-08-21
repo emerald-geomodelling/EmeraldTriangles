@@ -4,7 +4,7 @@
 import numpy as np
 import pandas as pd
 
-xy = np.asarray([
+vertices = np.asarray([
     [-0.101, 0.872], [-0.080, 0.883], [-0.069, 0.888], [-0.054, 0.890],
     [-0.045, 0.897], [-0.057, 0.895], [-0.073, 0.900], [-0.087, 0.898],
     [-0.090, 0.904], [-0.069, 0.907], [-0.069, 0.921], [-0.080, 0.919],
@@ -52,10 +52,10 @@ newpoints = pd.DataFrame(np.asarray([
     [-0.010, 0.830], [0.01, 0.820]
 ]), columns=["X", "Y"])
 
-xy = pd.DataFrame(xy, columns=["X", "Y"])
+vertices = pd.DataFrame(vertices, columns=["X", "Y"])
 triangles = pd.DataFrame(triangles)
 
-x, y = np.rad2deg(xy.values).T
+x, y = np.rad2deg(vertices.values).T
 xmid = x[triangles].mean(axis=1)
 ymid = y[triangles].mean(axis=1)
 x0 = -5
