@@ -40,8 +40,8 @@ def reindex(points, faces):
     points = points.drop(columns=["index"])
     return points, faces
 
-def append_nodes(points, triangle_nodes, triangle_faces):
-    triangle_nodes, triangle_faces = cleanup.reindex(triangle_nodes, triangle_faces)
-    points_start = len(triangle_nodes)
-    points_and_nodes = triangle_nodes.append(points).reset_index(drop=True)
-    return points_and_nodes, triangle_faces, points_start
+def append_nodes(points, vertices, triangles):
+    vertices, triangles = cleanup.reindex(vertices, triangles)
+    points_start = len(vertices)
+    points_and_nodes = vertices.append(points).reset_index(drop=True)
+    return points_and_nodes, triangles, points_start

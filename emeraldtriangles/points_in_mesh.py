@@ -26,18 +26,18 @@ def points_in_triangle(PS, A,B,C):
         yield bboxfilter[matches]
         
 
-def points_in_triangles(points, triangle_nodes, triangle_faces):
+def points_in_triangles(points, vertices, triangles):
     """
     points: DataFrame with columns X and Y
-    triangle_nodes: DataFrame with columns X and Y
-    triangle_faces: DataFrame with columns 0, 1, 2 with indices into triangle_nodes
+    vertices: DataFrame with columns X and Y
+    triangles: DataFrame with columns 0, 1, 2 with indices into vertices
     Returns:
-    DataFrame with columns point and triangle with indices into points and triangle_faces respectively.
+    DataFrame with columns point and triangle with indices into points and triangles respectively.
     """
     P = points[["X", "Y"]].values
-    A = triangle_nodes.loc[triangle_faces[0].values][["X", "Y"]].values
-    B = triangle_nodes.loc[triangle_faces[1].values][["X", "Y"]].values
-    C = triangle_nodes.loc[triangle_faces[2].values][["X", "Y"]].values
+    A = vertices.loc[triangles[0].values][["X", "Y"]].values
+    B = vertices.loc[triangles[1].values][["X", "Y"]].values
+    C = vertices.loc[triangles[2].values][["X", "Y"]].values
 
     points_and_triangles = pd.DataFrame([
         (idx, matches[0] if len(matches) > 0 else -1)

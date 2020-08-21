@@ -7,24 +7,24 @@ from . import cleanup
 from . import points_in_mesh
 from . import boundary
 
-def replace_triangle_faces(points, triangle_nodes, triangle_faces):
-    triangle_nodes, triangle_faces = cleanup.reindex(triangle_nodes, triangle_faces)
-    points_start = len(triangle_nodes)
-    points_and_nodes = triangle_nodes.append(points).reset_index(drop=True)
+def replace_triangles(points, vertices, triangles):
+    vertices, triangles = cleanup.reindex(vertices, triangles)
+    points_start = len(vertices)
+    points_and_nodes = vertices.append(points).reset_index(drop=True)
 
     P = points[["X", "Y"]].values
-    A = triangle_nodes.loc[triangle_faces[0].values][["X", "Y"]].values
-    B = triangle_nodes.loc[triangle_faces[1].values][["X", "Y"]].values
-    C = triangle_nodes.loc[triangle_faces[2].values][["X", "Y"]].values
+    A = vertices.loc[triangles[0].values][["X", "Y"]].values
+    B = vertices.loc[triangles[1].values][["X", "Y"]].values
+    C = vertices.loc[triangles[2].values][["X", "Y"]].values
     
-    points_and_triangles = points_in_mesh.points_in_triangles(points, triangle_nodes, triangle_faces)
+    points_and_triangles = points_in_mesh.points_in_triangles(points, vertices, triangles)
 
-    mask = np.zeros(triangle_faces.index.shape, dtype="bool")
+    mask = np.zeros(triangles.index.shape, dtype="bool")
     mask[:] = 1
     mask[np.unique(points_and_triangles["triangle"])] = 0
     
     leftover = None
-    all_new_faces = triangle_faces[mask].copy()
+    all_new_faces = triangles[mask].copy()
     for triangle, group in points_and_triangles.groupby("triangle"):
         if triangle == -1:
             leftover = group["point"] + points_start
@@ -41,11 +41,11 @@ def replace_triangle_faces(points, triangle_nodes, triangle_faces):
         triangulation = scipy.spatial.Delaunay(triangulation_points, qhull_options="QJ")
 
         triangulation_point_indices = np.append((group["point"] + points_start),
-                                                np.array((triangle_faces[0].loc[triangle],
-                                                          triangle_faces[1].loc[triangle],
-                                                          triangle_faces[2].loc[triangle])))
+                                                np.array((triangles[0].loc[triangle],
+                                                          triangles[1].loc[triangle],
+                                                          triangles[2].loc[triangle])))
         
-        new_faces = triangle_faces.iloc[pd.Index([triangle]).repeat(len(triangulation.simplices))].copy()
+        new_faces = triangles.iloc[pd.Index([triangle]).repeat(len(triangulation.simplices))].copy()
         new_faces[0] = triangulation_point_indices[triangulation.simplices[:,0]]
         new_faces[1] = triangulation_point_indices[triangulation.simplices[:,1]]
         new_faces[2] = triangulation_point_indices[triangulation.simplices[:,2]]        
@@ -53,19 +53,19 @@ def replace_triangle_faces(points, triangle_nodes, triangle_faces):
 
     return points_and_nodes, all_new_faces, leftover
 
-def supplant_triangle_faces(triangle_nodes, triangle_faces):
-    border_sides = boundary.mesh_boundary(triangle_faces)
+def supplant_triangles(vertices, triangles):
+    border_sides = boundary.mesh_boundary(triangles)
 
     tri = {
-        "vertices": triangle_nodes,
+        "vertices": vertices,
         "segments": border_sides[[0, 1]].append(pd.DataFrame(
-            scipy.spatial.ConvexHull(triangle_nodes).simplices, columns=[0,1])),
-        "holes": (triangle_nodes.loc[triangle_faces[0]].values
-                  + triangle_nodes.loc[triangle_faces[1]].values
-                  + triangle_nodes.loc[triangle_faces[2]].values) / 3
+            scipy.spatial.ConvexHull(vertices).simplices, columns=[0,1])),
+        "holes": (vertices.loc[triangles[0]].values
+                  + vertices.loc[triangles[1]].values
+                  + vertices.loc[triangles[2]].values) / 3
     }
     res = triangle.triangulate(tri, 'p')
 
-    res["triangles"] = triangle_faces.iloc[0:0].append(pd.DataFrame(res["triangles"]))
-    res["vertices"] = triangle_nodes
+    res["triangles"] = triangles.iloc[0:0].append(pd.DataFrame(res["triangles"]))
+    res["vertices"] = vertices
     return res
