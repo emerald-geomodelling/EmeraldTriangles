@@ -1,6 +1,6 @@
-# EmeraldTriangles
+<img src="example.png" align="right"></image>
 
-<img src="example.png" align="right">
+# EmeraldTriangles
 
 This library provides transformations for triangle meshes build on top of [scipy.spatial.Delaunay](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.Delaunay.html) and [Triangle](https://rufat.be/triangle/):
 
