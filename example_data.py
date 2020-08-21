@@ -60,7 +60,7 @@ x0 = -5
 y0 = 52
 
 triangles = pd.DataFrame(triangles)
-triangles["color"] = np.exp(-0.01 * ((xmid - x0) * (xmid - x0) + (ymid - y0) * (ymid - y0)))
+triangles["facecolors"] = np.exp(-0.01 * ((xmid - x0) * (xmid - x0) + (ymid - y0) * (ymid - y0)))
 
 vertices = pd.DataFrame(vertices, columns=["X", "Y"])
 vertices["color"] = 0.0
