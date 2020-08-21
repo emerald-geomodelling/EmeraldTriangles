@@ -2,7 +2,7 @@
 
 # EmeraldTriangles
 
-This library provides transformations for triangle meshes build on top of [scipy.spatial.Delaunay](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.Delaunay.html) and [Triangle](https://rufat.be/triangle/):
+This library provides transformations for triangle meshes built on top of [scipy.spatial.Delaunay](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.Delaunay.html) and [Triangle](https://rufat.be/triangle/):
 
   * Insert points (nodes) in an existing mesh, splitting any triangles that points fall into.
     * Meshes created this way might not be Delaunay, but any new connected set of triangles added will be Delaunay if viewed in isolation (without the pre-existing mesh).
