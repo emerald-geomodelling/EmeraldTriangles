@@ -51,13 +51,16 @@ newpoints = pd.DataFrame(np.asarray([
     [-0.070, 0.850], [-0.059, 0.860],
     [-0.010, 0.830], [0.01, 0.820]
 ]), columns=["X", "Y"])
+newpoints["color"] = 1.0
 
-vertices = pd.DataFrame(vertices, columns=["X", "Y"])
-triangles = pd.DataFrame(triangles)
-
-x, y = np.rad2deg(vertices.values).T
+x, y = np.rad2deg(vertices).T
 xmid = x[triangles].mean(axis=1)
 ymid = y[triangles].mean(axis=1)
 x0 = -5
 y0 = 52
+
+triangles = pd.DataFrame(triangles)
 triangles["color"] = np.exp(-0.01 * ((xmid - x0) * (xmid - x0) + (ymid - y0) * (ymid - y0)))
+
+vertices = pd.DataFrame(vertices, columns=["X", "Y"])
+vertices["color"] = 0.0

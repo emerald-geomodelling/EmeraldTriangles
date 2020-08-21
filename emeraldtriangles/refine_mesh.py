@@ -56,13 +56,14 @@ def replace_triangles(points, vertices, triangles):
 def supplant_triangles(vertices, triangles):
     border_sides = boundary.mesh_boundary(triangles)
 
+    trivertices = vertices[["X", "Y"]]
     tri = {
-        "vertices": vertices,
+        "vertices": trivertices,
         "segments": border_sides[[0, 1]].append(pd.DataFrame(
-            scipy.spatial.ConvexHull(vertices).simplices, columns=[0,1])),
-        "holes": (vertices.loc[triangles[0]].values
-                  + vertices.loc[triangles[1]].values
-                  + vertices.loc[triangles[2]].values) / 3
+            scipy.spatial.ConvexHull(trivertices).simplices, columns=[0,1])),
+        "holes": (trivertices.loc[triangles[0]].values
+                  + trivertices.loc[triangles[1]].values
+                  + trivertices.loc[triangles[2]].values) / 3
     }
     res = triangle.triangulate(tri, 'p')
 
