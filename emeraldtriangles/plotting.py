@@ -56,11 +56,11 @@ def plot(ax, **kw):
     
     ax.axes.set_aspect('equal')
     vertices(ax, **kworig)
-    if "points" in kw:
+    if "points" in kw and len(kw["points"]):
         points(ax, **kworig)
     if 'segments' in kw:
         plotmod.segments(ax, **kw)
-    if 'triangles' in kw:
+    if 'triangles' in kw and len(kw["triangles"]):
         triangles(ax, **kworig)
     if 'holes' in kw:
         plotmod.holes(ax, **kw)

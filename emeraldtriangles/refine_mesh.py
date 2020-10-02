@@ -21,7 +21,9 @@ def replace_triangles(points, vertices, triangles, **tri):
 
     mask = np.zeros(triangles.index.shape, dtype="bool")
     mask[:] = 1
-    mask[np.unique(points_and_triangles["triangle"])] = 0
+    triangles_with_points = np.unique(points_and_triangles["triangle"])
+    triangles_with_points = triangles_with_points[triangles_with_points != -1]
+    mask[triangles_with_points] = 0
     
     leftover = None
     all_new_faces = triangles[mask].copy()
@@ -58,19 +60,25 @@ def replace_triangles(points, vertices, triangles, **tri):
     return res
 
 def supplant_triangles(**tri):
-    tri = boundary.mesh_boundary(**tri)
-
     vertices, triangles = tri["vertices"], tri["triangles"]
     trivertices = vertices[["X", "Y"]]
-    border_sides = tri["segments"]
-    tri = {
-        "vertices": trivertices,
-        "segments": border_sides[[0, 1]].append(pd.DataFrame(
-            scipy.spatial.ConvexHull(trivertices).simplices, columns=[0,1])),
-        "holes": (trivertices.loc[triangles[0]].values
-                  + trivertices.loc[triangles[1]].values
-                  + trivertices.loc[triangles[2]].values) / 3
-    }
+    if len(triangles):
+        tri = boundary.mesh_boundary(**tri)
+        border_sides = tri["segments"]
+        tri = {
+            "vertices": trivertices,
+            "segments": border_sides[[0, 1]].append(pd.DataFrame(
+                scipy.spatial.ConvexHull(trivertices).simplices, columns=[0,1])),
+            "holes": (trivertices.loc[triangles[0]].values
+                      + trivertices.loc[triangles[1]].values
+                      + trivertices.loc[triangles[2]].values) / 3
+        }
+    else:
+        tri = {
+            "vertices": trivertices,
+            "segments": pd.DataFrame(
+                scipy.spatial.ConvexHull(trivertices).simplices, columns=[0,1])
+        }
     res = dict(tri)
     res.update(triangle.triangulate(tri, 'p'))
     res["triangles"] = triangles.append(triangles.iloc[0:0].append(pd.DataFrame(res["triangles"])))
