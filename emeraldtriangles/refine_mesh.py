@@ -59,28 +59,47 @@ def replace_triangles(points, vertices, triangles, **tri):
     res["leftover"] = leftover
     return res
 
-def supplant_triangles(**tri):
-    vertices, triangles = tri["vertices"], tri["triangles"]
-    trivertices = vertices[["X", "Y"]]
-    if len(triangles):
-        tri = boundary.mesh_boundary(**tri)
-        border_sides = tri["segments"]
-        tri = {
-            "vertices": trivertices,
-            "segments": border_sides[[0, 1]].append(pd.DataFrame(
-                scipy.spatial.ConvexHull(trivertices).simplices, columns=[0,1])),
-            "holes": (trivertices.loc[triangles[0]].values
-                      + trivertices.loc[triangles[1]].values
-                      + trivertices.loc[triangles[2]].values) / 3
-        }
-    else:
-        tri = {
-            "vertices": trivertices,
-            "segments": pd.DataFrame(
-                scipy.spatial.ConvexHull(trivertices).simplices, columns=[0,1])
-        }
+def supplant_triangles(existing_boundary=False, **tri):
+    tri = boundary.mesh_boundary(**tri)
+    if not existing_boundary:
+        tri = boundary.vertices_boundary(**tri)
+
+    trivertices = tri["vertices"][["X", "Y"]]
+
     res = dict(tri)
-    res.update(triangle.triangulate(tri, 'p'))
-    res["triangles"] = triangles.append(triangles.iloc[0:0].append(pd.DataFrame(res["triangles"])))
-    res["vertices"] = vertices
+    process_tri = {"vertices": trivertices.values}
+    if "segments" in tri:
+        process_tri["segments"] = tri["segments"][[0, 1]].values
+    if "holes" in tri:
+        process_tri["holes"] = tri["holes"].values
+    if "triangles" in tri and len(tri["triangles"]):
+        triangles = tri["triangles"]
+        holes = (trivertices.loc[triangles[0]].values
+                 + trivertices.loc[triangles[1]].values
+                 + trivertices.loc[triangles[2]].values) / 3
+        if "holes" in process_tri:
+            holes = np.append(process_tri["holes"], holes)
+        process_tri["holes"] = holes
+
+    if existing_boundary:
+        xmin = tri["vertices"]["X"].min()
+        ymin = tri["vertices"]["Y"].min()
+        xmax = tri["vertices"]["X"].max()
+        ymax = tri["vertices"]["Y"].max()
+
+        process_tri["vertices"] = np.append(
+            process_tri["vertices"],
+            np.array([[xmin-2,ymin-2], [xmin-2, ymax+2], [xmax+2, ymax+2], [xmax+2, ymin-2]]),
+            axis=0)
+        
+        # holes = np.array([[xmin-1, ymin-1]])
+        # if "holes" in process_tri:
+        #     holes = np.append(process_tri["holes"], holes)
+        # process_tri["holes"] = holes
+
+    res.update(triangle.triangulate(process_tri, 'p'))
+    if "triangles" in tri:
+        triangles = tri["triangles"]
+        res["triangles"] = triangles.append(triangles.iloc[0:0].append(pd.DataFrame(res["triangles"])))
+    res["vertices"] = tri["vertices"]
     return res

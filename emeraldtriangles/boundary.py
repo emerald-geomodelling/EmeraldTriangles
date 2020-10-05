@@ -1,8 +1,14 @@
 import numpy as np
 import pandas as pd
+import scipy.spatial
+
+from . import cleanup
 
 def mesh_boundary(**tri):
     triangles = tri["triangles"]
+
+    if not len(triangles):
+        return tri
     
     sides = triangles[[0, 1]].assign(triangle=triangles.index).append(
         triangles[[1, 2]].assign(triangle=triangles.index).rename(columns={1:0, 2:1})).append(
@@ -14,10 +20,12 @@ def mesh_boundary(**tri):
 
     segments = sides.drop_duplicates([0, 1], keep=False, ignore_index=True)
 
-    res = dict(tri)
-    res["segments"] = segments
+    if "segments" in tri:
+        segments = tri["segments"].append(segments)
+        
+    tri["segments"] = segments
     
-    return res
+    return tri
 
 def _mesh_boundary_mark_rings(segments):
     segments = segments.copy()
@@ -79,3 +87,27 @@ def mesh_boundary_to_pointlists(segments, **tri):
     ).sort_values("pos").drop_duplicates("pos")["point"].values
     
     return res
+
+def vertices_boundary(**tri):
+    segments = pd.DataFrame(
+        scipy.spatial.ConvexHull(tri["vertices"][["X", "Y"]]).simplices,
+        columns=[0,1])
+    if "segments" in tri:
+        segments = tri["segments"].append(segments)
+    tri["segments"] = segments
+    return tri
+
+def polygon_to_boundary(poly, **tri):
+    for boundary in poly.boundary.geoms:
+        tri["vertices"], tri["triangles"], start = cleanup.append_nodes(
+            pd.DataFrame(np.array(boundary.coords[:-1]), columns=["X", "Y"]),
+            tri["vertices"], tri["triangles"])
+
+        segments = start + np.append(np.arange(len(boundary.coords) - 1), [0])
+        segments = pd.DataFrame(np.column_stack((segments[:-1], segments[1:])))
+
+        if "segments" in tri:
+            tri["segments"] = tri["segments"].append(segments)
+        else:
+            tri["segments"] = segments
+    return tri

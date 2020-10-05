@@ -41,7 +41,7 @@ def reindex(points, faces):
     return points, faces
 
 def append_nodes(points, vertices, triangles):
-    vertices, triangles = cleanup.reindex(vertices, triangles)
+    vertices, triangles = reindex(vertices, triangles)
     points_start = len(vertices)
     points_and_nodes = vertices.append(points).reset_index(drop=True)
     return points_and_nodes, triangles, points_start
