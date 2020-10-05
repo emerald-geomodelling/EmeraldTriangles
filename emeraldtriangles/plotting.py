@@ -6,14 +6,19 @@ import sys
 # Yeah, module is shadowed by the function...
 plotmod = sys.modules["triangle.plot"]
 
-def triangles(ax, **kw):
-    args = {}
-    if "facecolors" in kw['triangles'].columns:
-        args["facecolors"] = kw['triangles']["facecolors"].values
+def triangles(ax, vertices, triangles, zorder=-1, edgecolors="red", facecolors="green", cmap="viridis", **kw):
+    args = [vertices["X"], vertices["Y"]]
+    kwargs = {"zorder": zorder, "edgecolors": edgecolors, "cmap": cmap}
+    if "facecolors" in triangles.columns:
+        kwargs["facecolors"] = triangles["facecolors"].values
+    elif "color" in vertices.columns:
+        args.append(vertices["color"].values)
     else:
-        args["facecolors"] = np.zeros(len(kw['triangles']))
-    
-    ax.tripcolor(kw['vertices']["X"], kw['vertices']["Y"], kw['triangles'][[0, 1, 2]], zorder=-1, edgecolors="k", **args)
+        kwargs["facecolors"] = np.zeros(len(triangles))
+        kwargs["cmap"] = matplotlib.colors.ListedColormap(np.array([matplotlib.colors.to_rgba(facecolors)]))
+    args.append(triangles[[0, 1, 2]])
+        
+    ax.tripcolor(*args, **kwargs)
 
 def vertices(ax, **kw):
     verts = kw['vertices'][["X", "Y"]].values
