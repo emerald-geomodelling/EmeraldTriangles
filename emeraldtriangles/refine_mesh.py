@@ -89,17 +89,18 @@ def supplant_triangles(existing_boundary=False, **tri):
 
         process_tri["vertices"] = np.append(
             process_tri["vertices"],
-            np.array([[xmin-2,ymin-2], [xmin-2, ymax+2], [xmax+2, ymax+2], [xmax+2, ymin-2]]),
+            np.array([[xmin-20,ymin-20], [xmin-20, ymax+20], [xmax+20, ymax+20], [xmax+20, ymin-20]]),
             axis=0)
         
-        # holes = np.array([[xmin-1, ymin-1]])
-        # if "holes" in process_tri:
-        #     holes = np.append(process_tri["holes"], holes)
-        # process_tri["holes"] = holes
+        holes = np.array([[xmin-10, ymin-10]])
+        if "holes" in process_tri:
+            holes = np.append(process_tri["holes"], holes)
+        process_tri["holes"] = holes
 
     res.update(triangle.triangulate(process_tri, 'p'))
     if "triangles" in tri:
         triangles = tri["triangles"]
         res["triangles"] = triangles.append(triangles.iloc[0:0].append(pd.DataFrame(res["triangles"])))
     res["vertices"] = tri["vertices"]
+    #res["vertices"] = pd.DataFrame(res["vertices"], columns=("X", "Y"))
     return res
