@@ -19,12 +19,12 @@ def colormap_default(color, column="color", fixed="red", palette="Inferno256", d
             dataset[datacolumn].min(), dataset[datacolumn].max())
     return color or fixed
         
-def points(fig, color=None, **tri):
+def points(fig, color=None, tags=[], **tri):
     color = colormap_default(color, fixed="green", palette="Greens256", datasets=[tri["vertices"]])
     source = bokeh.models.ColumnDataSource(data=tri["vertices"])
-    fig.circle(x="X", y="Y", color=color, source=source)
+    fig.circle(x="X", y="Y", color=color, source=source, tags=tags + ["points"])
 
-def triangles(fig, color, line_color=None, **tri):
+def triangles(fig, color, tags=[], line_color=None, **tri):
     color = colormap_default(color, column="color", fixed="red", palette="Inferno256", datasets=[tri["vertices"], tri["triangles"]])
     vertices = tri["vertices"]
     triangles = tri["triangles"]
@@ -36,6 +36,17 @@ def triangles(fig, color, line_color=None, **tri):
              [row[1].values[0], row[1].values[1], row[1].values[2], row[1].values[0]]]]]
           for row in triangles.iterrows()]
     data={"xs": xs, "ys": ys}
+    for col in vertices.columns:
+        if (    col not in ("X", "Y")
+            and (   vertices[col].dtype.name.startswith("float")
+                 or vertices[col].dtype.name.startswith("int"))):
+            data[col] = (  vertices[col].values[triangles[0].values]
+                         + vertices[col].values[triangles[1].values]
+                         + vertices[col].values[triangles[2].values]) / 3
+            
+    for col in triangles.columns:
+        if col not in (0, 1, 2):
+            data[col] = col
     
     colorcol = None
     if isinstance(color, str) and (color in vertices.columns or color in triangles.columns):
@@ -52,19 +63,19 @@ def triangles(fig, color, line_color=None, **tri):
                               + vertices[colorcol].values[triangles[2].values]) / 3
 
     source = bokeh.models.ColumnDataSource(data=data)
-    glyph = bokeh.models.MultiPolygons(xs="xs", ys="ys", fill_color=color, line_color="#8073ac", line_width=1)
+    glyph = bokeh.models.MultiPolygons(xs="xs", ys="ys", fill_color=color, line_color="#8073ac", line_width=1, tags=tags + ["triangles"])
     fig.add_glyph(source, glyph)
 
-def plot(fig, color = None, **tri):
+def plot(fig, color = None, tags=[], **tri):
     if "vertices" in tri:
         tri["vertices"] = tri["vertices"].copy().fillna(-1)
     
     if "points" in tri and len(tri["points"]):
-        points(fig, color, **tri)
+        points(fig, color, tags, **tri)
     if 'segments' in tri:
         pass
     if 'triangles' in tri and len(tri["triangles"]):
-        triangles(fig, color, **tri)
+        triangles(fig, color, tags, **tri)
     if 'holes' in tri:
         pass
     if 'edges' in tri:
