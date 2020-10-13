@@ -30,10 +30,10 @@ def triangles(fig, color, tags=[], line_color=None, **tri):
     triangles = tri["triangles"]
 
     xs = [[[vertices["X"].values[
-             [row[1].values[0], row[1].values[1], row[1].values[2], row[1].values[0]]]]]
+             [row[1][0], row[1][1], row[1][2], row[1][0]]]]]
           for row in triangles.iterrows()]
     ys = [[[vertices["Y"].values[
-             [row[1].values[0], row[1].values[1], row[1].values[2], row[1].values[0]]]]]
+             [row[1][0], row[1][1], row[1][2], row[1][0]]]]]
           for row in triangles.iterrows()]
     data={"xs": xs, "ys": ys}
     for col in vertices.columns:
@@ -45,7 +45,9 @@ def triangles(fig, color, tags=[], line_color=None, **tri):
                          + vertices[col].values[triangles[2].values]) / 3
             
     for col in triangles.columns:
-        if col not in (0, 1, 2):
+        if (    col not in (0, 1, 2)
+            and (   triangles[col].dtype.name.startswith("float")
+                 or triangles[col].dtype.name.startswith("int"))):
             data[col] = col
     
     colorcol = None

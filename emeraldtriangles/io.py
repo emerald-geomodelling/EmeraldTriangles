@@ -37,6 +37,31 @@ def to_sql(con, name, tri_id=None, vertice_base_columns=["X", "Y"], triangle_bas
 
     info.to_sql(name="%s" % name, con=con, if_exists="append", method='multi', index=False)
     vertices_pure.to_sql(name="%s_vertices" % name, con=con, if_exists="append", method='multi', index=False)
-    vertice_cols.to_sql(name="%s_vertices_columns % name", con=con, if_exists="append", method='multi', index=False)    
+    vertice_cols.to_sql(name="%s_vertices_columns" % name, con=con, if_exists="append", method='multi', index=False)    
     triangles_pure.to_sql(name="%s_triangles" % name, con=con, if_exists="append", method='multi', index=False)
     triangle_cols.to_sql(name="%s_triangles_columns" % name, con=con, if_exists="append", method='multi', index=False)
+
+def read_sql(con, name, tri_id):
+    info = pd.read_sql_query("select * from %s where tri_id = %%s" % name, params=(tri_id,), con=con)
+    vertices = pd.read_sql_query("select * from %s_vertices where tri_id = %%s" % name, params=(tri_id,), con=con)
+    vertices_columns = pd.read_sql_query("select * from %s_vertices_columns where tri_id = %%s" % name, params=(tri_id,), con=con)
+    triangles = pd.read_sql_query("select * from %s_triangles where tri_id = %%s" % name, params=(tri_id,), con=con)
+    triangles_columns = pd.read_sql_query("select * from %s_triangles_columns where tri_id = %%s" % name, params=(tri_id,), con=con)
+
+    vertices_columns = vertices_columns.pivot("vertex_id", "column", "value")
+    triangles_columns = triangles_columns.pivot("triangle_id", "column", "value")
+
+    vertices = vertices.set_index("vertex_id").sort_index().join(vertices_columns)
+    triangles = triangles.set_index("triangle_id").sort_index().join(triangles_columns)
+
+    triangles.columns = [int(col) if col in ("0", "1", "2") else col for col in triangles.columns]
+
+    info = dict(info.iloc[0])
+    for key, value in info.items():
+        try:
+            info[key] = json.loads(value)
+        except:
+            pass
+
+    return {"vertices": vertices, "triangles": triangles, "meta": info}
+
