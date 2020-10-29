@@ -63,9 +63,13 @@ def triangles(fig, color, tags=[], line_color=None, **tri):
             data[colorcol] = (  vertices[colorcol].values[triangles[0].values]
                               + vertices[colorcol].values[triangles[1].values]
                               + vertices[colorcol].values[triangles[2].values]) / 3
+    if "line_width" in tri:
+        line_width_param = tri["line_width"]
+    else:
+        line_width_param = 0.1
 
     source = bokeh.models.ColumnDataSource(data=data)
-    glyph = bokeh.models.MultiPolygons(xs="xs", ys="ys", fill_color=color, line_color="#8073ac", line_width=0.1, tags=tags + ["triangles"])
+    glyph = bokeh.models.MultiPolygons(xs="xs", ys="ys", fill_color=color, line_color="#8073ac", line_width=line_width_param, tags=tags + ["triangles"])
     fig.add_glyph(source, glyph)
 
 def plot(fig, color = None, tags=[], **tri):
