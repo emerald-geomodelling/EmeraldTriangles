@@ -98,7 +98,7 @@ def vertices_boundary(**tri):
     return tri
 
 def polygon_to_boundary(poly, **tri):
-    if hasatt(poly.boundary, 'geoms'):
+    if hasattr(poly.boundary, 'geoms'):
         boundary_geoms = poly.boundary.geoms
     else:
         boundary_geoms = [poly.boundary]
