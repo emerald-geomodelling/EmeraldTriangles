@@ -98,7 +98,12 @@ def vertices_boundary(**tri):
     return tri
 
 def polygon_to_boundary(poly, **tri):
-    for boundary in poly.boundary.geoms:
+    if hasattr(poly.boundary, 'geoms'):
+        boundary_geoms = poly.boundary.geoms
+    else:
+        boundary_geoms = [poly.boundary]
+
+    for boundary in boundary_geoms:
         tri["vertices"], tri["triangles"], start = cleanup.append_nodes(
             pd.DataFrame(np.array(boundary.coords[:-1]), columns=["X", "Y"]),
             tri["vertices"], tri["triangles"])

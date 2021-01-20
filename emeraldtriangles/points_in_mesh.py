@@ -16,6 +16,9 @@ def point_in_triangle(P, A,B,C):
     return (u >= 0) & (v >= 0) & (u + v < 1)
 
 def points_in_triangle(PS, A,B,C):
+    if len(A)==0:
+        return np.array([])
+
     mi = np.minimum(np.minimum(A, B), C)
     ma = np.maximum(np.maximum(A, B), C)
 
@@ -41,6 +44,5 @@ def points_in_triangles(points, vertices, triangles, **kw):
 
     points_and_triangles = pd.DataFrame([
         (idx, matches[0] if len(matches) > 0 else -1)
-        for idx, matches in enumerate(points_in_triangle(P, A, B, C))])
-    points_and_triangles.columns = ["point", "triangle"]
+        for idx, matches in enumerate(points_in_triangle(P, A, B, C))], columns = ["point", "triangle"], dtype = np.int)
     return points_and_triangles
