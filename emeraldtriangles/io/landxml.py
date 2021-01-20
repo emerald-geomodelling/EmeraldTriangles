@@ -48,6 +48,7 @@ def parse(xmlfile):
         for triangle_node in surface_node.getElementsByTagName('F'):
             idxs = [int(val) for val in triangle_node.childNodes[0].data.split(" ")]
             triangles.append(idxs)
+        triangles = triangles - 1 # LandXML points are numbered from 1, not 0
         surface["triangles"] = pd.DataFrame(triangles, columns=(0, 1, 2), dtype=int)
 
         surfaces[surface_node.getAttributeNode("name").value] = surface
