@@ -42,7 +42,7 @@ def parse(xmlfile):
             # id = point_node.getAttributeNode("id").value
             points.append(coords)
         points = np.array(points)
-        surface["vertices"] = pd.DataFrame(points, columns=("X", "Y", "Z", "M")[:points.shape[1]])
+        surface["vertices"] = pd.DataFrame(points, columns=("Y", "X", "Z", "M")[:points.shape[1]])
 
         triangles = []
         for triangle_node in surface_node.getElementsByTagName('F'):
