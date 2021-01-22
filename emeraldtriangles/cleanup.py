@@ -47,7 +47,7 @@ def append_nodes(points, vertices, triangles):
     return points_and_nodes, triangles, points_start
 
 def merge_tins(a, b):
-    points_and_nodes, triangles, points_start = emeraldtriangles.cleanup.append_nodes(
+    points_and_nodes, triangles, points_start = append_nodes(
         b["vertices"], a["vertices"], a["triangles"])
     res = dict(a)
     res["vertices"] = points_and_nodes
