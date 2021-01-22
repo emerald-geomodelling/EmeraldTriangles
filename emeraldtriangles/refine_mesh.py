@@ -98,9 +98,59 @@ def supplant_triangles(existing_boundary=False, **tri):
         process_tri["holes"] = holes
 
     res.update(triangle.triangulate(process_tri, 'p'))
+    
     if "triangles" in tri:
         triangles = tri["triangles"]
         res["triangles"] = triangles.append(triangles.iloc[0:0].append(pd.DataFrame(res["triangles"])))
-    res["vertices"] = tri["vertices"]
-    #res["vertices"] = pd.DataFrame(res["vertices"], columns=("X", "Y"))
+
+    res["vertices"] = tri["vertices"].append(
+        pd.DataFrame(res["vertices"][len(tri["vertices"]):,:], columns=["X", "Y"]), ignore_index=True)
+
+    new_points = res["vertices"].loc[len(tri["vertices"]):].index
+    if len(new_points):
+        res = interpolate_vertices(res, new_points)
+
+    return res
+
+
+def triangles_to_segments(triangles):
+    return triangles[[0, 1]].append(
+        triangles[[1, 2]].rename(columns={1:0, 2:1})).append(
+        triangles[[2, 0]].rename(columns={2:0, 0:1})).append(
+        triangles[[0, 1]].rename(columns={0:1, 1:0})).append(
+        triangles[[1, 2]].rename(columns={2:0, 1:1})).append(
+        triangles[[2, 0]].rename(columns={0:0, 2:1})).drop_duplicates().set_index(0).sort_index()
+
+def interpolate_vertices(tri, to_interpolate_idxs):
+    new_points = to_interpolate_idxs
+    
+    new_triangles = (
+          tri["triangles"][0].isin(new_points)
+        | tri["triangles"][1].isin(new_points)
+        | tri["triangles"][2].isin(new_points))
+
+    segments = triangles_to_segments(tri["triangles"].loc[new_triangles])
+
+    segments2 = segments.join(
+        tri["vertices"]
+    ).reset_index().rename(columns={"index":0}).set_index(1).join(
+        tri["vertices"][["X", "Y"]].rename(columns={"X":"X1", "Y":"Y1"}))
+
+    segments2["segment_length"] = np.sqrt(  (segments2["X1"]-segments2["X"])**2
+                                          + (segments2["Y1"]-segments2["Y"])**2)
+    segments2["segment_weight"] = 1. / segments2["segment_length"]
+    segments2 = segments2[~segments2[0].isin(new_points)]
+
+    segments3 = segments2.mul(
+        segments2["segment_weight"], axis=0
+    ).assign(
+        segment_weight=segments2["segment_weight"]
+    ).groupby(level=0).sum()
+
+    interpolated = segments3.div(segments3["segment_weight"], axis=0)
+
+    res = dict(tri)
+    res["vertices"] = res["vertices"].copy()
+    cols = set(interpolated.columns).intersection(set(tri["vertices"].columns)) - set(("X", "Y"))
+    res["vertices"].loc[interpolated.index, cols] = interpolated[cols]
     return res
