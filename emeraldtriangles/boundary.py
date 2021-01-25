@@ -82,10 +82,10 @@ def mesh_boundary_to_pointlists(segments, **tri):
     for ring in segments["ring"].unique():
         ringborders = segments[segments["ring"] == ring]
     
-    res[int(ring)] = ringborders[[0, "pos"]].rename(columns={0:"point"}).append(
-        ringborders[[1, "pos"]].rename(columns={1:"point"})
-    ).sort_values("pos").drop_duplicates("pos")["point"].values
-    
+        res[int(ring)] = ringborders[[0, "pos"]].rename(columns={0:"point"}).append(
+            ringborders[[1, "pos"]].rename(columns={1:"point"})
+        ).sort_values("pos").drop_duplicates("pos")["point"].values
+
     return res
 
 def vertices_boundary(**tri):
