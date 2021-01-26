@@ -22,6 +22,12 @@ any extra columns across operations. It also contains a plotting
 function similar to the one in the Triangle library, that supports
 color attributes for vertices as well as triangle faces.
 
+In addition, EmeraldTriangles provides import and export functionality
+for
+
+  * LandXML (import and export, no extra columns)
+  * VTK (only export)
+
 # Documentation
 
 Documentation is provided in the form of a [jupyter notebook with
