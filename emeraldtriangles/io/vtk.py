@@ -21,7 +21,7 @@ def dump(tri, filename):
         fid.write('DATASET UNSTRUCTURED_GRID\n')
 
         print('POINTS', point_coordinates.shape[0], 'float', file=fid)
-        np.savetxt(fid, point_coordinates, fmt='%.2f', delimiter=' ', newline='\n', )
+        np.savetxt(fid, point_coordinates, fmt='%f', delimiter=' ', newline='\n', )
 
         print('CELLS', cell_indices_np.shape[0], cells_out_vtk.size, file=fid)
         np.savetxt(fid, cells_out_vtk, fmt='%d', delimiter=' ', newline='\n')

@@ -9,16 +9,22 @@ def split_extra_columns(df, index_columns, base_columns):
               ].melt(index_columns, var_name="column")
     return base, extra
 
-def to_sql(con, name, tri_id=None, vertice_base_columns=["X", "Y"], triangle_base_columns=[0, 1, 2], **tri):
+def to_sql(con, name, tri_id=None, vertice_base_columns=["X", "Y"], triangle_base_columns=[0, 1, 2], info_base_columns=None, **tri):
     if tri_id is None:
         tri_id = str(uuid.uuid4())
 
     info = dict(tri.get("meta", {}))
+    if info_base_columns is not None:
+        extra = {}
+        for col in set(info.keys()) - set(info_base_columns):
+            extra[col] = info.pop(col)
+        info["extra"] = extra
     for key, value in info.items():
         if isinstance(value, dict):
-            info[key] = json.dumps(value)    
+            info[key] = json.dumps(value)
     info["tri_id"] = tri_id
     info = pd.DataFrame([info])
+    
 
     vertices = tri["vertices"].reset_index().rename(columns={"index":"vertex_id"})
     vertices["tri_id"] = tri_id
@@ -62,6 +68,8 @@ def read_sql(con, name, tri_id):
             info[key] = json.loads(value)
         except:
             pass
-
+    if "extra" in info:
+        info.update(info.pop("extra"))
+        
     return {"vertices": vertices, "triangles": triangles, "meta": info}
 

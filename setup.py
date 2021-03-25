@@ -4,7 +4,7 @@ import setuptools
 
 setuptools.setup(
     name='emeraldtriangles',
-    version='0.0.3',
+    version='0.0.4',
     description='Triangle mesh transforms',
     long_description='Iteratively add points to an existing mesh, calculate mesh bounding polygons etc.',
     long_description_content_type="text/markdown",
@@ -16,6 +16,7 @@ setuptools.setup(
         "numpy",
         "pandas",
         "scipy",
-        "triangle"
+        "triangle",
+        "lxml"
     ]
 )
