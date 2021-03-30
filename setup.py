@@ -1,6 +1,20 @@
 #!/usr/bin/env python
 
 import setuptools
+import subprocess
+from setuptools import setup, Extension
+
+include_dirs = [a for a in (a.strip() for a in subprocess.check_output(
+    ["pkg-config", "libxml-2.0", "--cflags-only-I"]).decode("utf-8").split("-I")) if a]
+library_dirs = [a for a in (a.strip() for a in subprocess.check_output(
+    ["pkg-config", "libxml-2.0", "--libs-only-L"]).decode("utf-8").split("-L")) if a]
+libraries = [a for a in (a.strip() for a in subprocess.check_output(
+    ["pkg-config", "libxml-2.0", "--libs-only-l"]).decode("utf-8").split("-l")) if a]
+
+class get_numpy_include(object):
+    def __fspath__(self):
+        import numpy
+        return numpy.get_include()
 
 setuptools.setup(
     name='emeraldtriangles',
@@ -9,7 +23,7 @@ setuptools.setup(
     long_description='Iteratively add points to an existing mesh, calculate mesh bounding polygons etc.',
     long_description_content_type="text/markdown",
     author='Egil Moeller',
-    author_email='em@emeraldgeo.no',
+    author_email='em@emerld.no',
     url='https://github.com/EMeraldGeo/EmeraldTriangles',
     packages=setuptools.find_packages(),
     install_requires=[
@@ -17,6 +31,21 @@ setuptools.setup(
         "pandas",
         "scipy",
         "triangle",
-        "lxml"
+        "lxml",
+        "matplotlib",
+    ],
+    setup_requires=[
+        'setuptools>=18.0',
+        'numpy',
+        'cython',
+    ],
+    ext_modules=[
+        Extension(
+            'emeraldtriangles.io._landxml',
+            sources=['emeraldtriangles/io/_landxml.pyx'],
+            include_dirs = include_dirs + [get_numpy_include()],
+            library_dirs = library_dirs,
+            libraries = libraries,
+        ),
     ]
 )

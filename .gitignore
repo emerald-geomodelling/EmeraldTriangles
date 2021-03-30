@@ -2,3 +2,10 @@
 *~
 *.egg-info
 .ipynb_checkpoints/
+core
+.eggs
+build
+dist
+env
+*.so
+*.c
