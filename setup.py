@@ -3,7 +3,6 @@
 import setuptools
 import subprocess
 from setuptools import setup, Extension
-import numpy
 
 include_dirs = [a for a in (a.strip() for a in subprocess.check_output(
     ["pkg-config", "libxml-2.0", "--cflags-only-I"]).decode("utf-8").split("-I")) if a]
@@ -12,6 +11,10 @@ library_dirs = [a for a in (a.strip() for a in subprocess.check_output(
 libraries = [a for a in (a.strip() for a in subprocess.check_output(
     ["pkg-config", "libxml-2.0", "--libs-only-l"]).decode("utf-8").split("-l")) if a]
 
+class get_numpy_include(object):
+    def __str__(self):
+        import numpy
+        return numpy.get_include()
 
 setuptools.setup(
     name='emeraldtriangles',
@@ -32,13 +35,14 @@ setuptools.setup(
     ],
     setup_requires=[
         'setuptools>=18.0',
+        'numpy',
         'cython',
     ],
     ext_modules=[
         Extension(
             'emeraldtriangles.io.landxml2',
             sources=['emeraldtriangles/io/landxml2.pyx'],
-            include_dirs = include_dirs + [numpy.get_include()],
+            include_dirs = include_dirs + [get_numpy_include()],
             library_dirs = library_dirs,
             libraries = libraries,
         ),
