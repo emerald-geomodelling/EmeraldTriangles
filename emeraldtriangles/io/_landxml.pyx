@@ -61,7 +61,7 @@ cdef class State(object):
     cdef append_point(State self, double point[4]):
         end = self.vertices.index.max() if self.vertices is not None else -1
         if self.vertice_idx > end:
-            self.vertices = pd.DataFrame(index=pd.RangeIndex(end + 1, end + 1 + self.chunk_size), columns=("Y", "X", "Z", "M"))
+            self.vertices = pd.DataFrame(index=pd.RangeIndex(end + 1, end + 1 + self.chunk_size), columns=("Y", "X", "Z", "M"), dtype=float)
             self.vertices_x = self.vertices["X"].values
             self.vertices_y = self.vertices["Y"].values
             self.vertices_z = self.vertices["Z"].values
@@ -77,7 +77,7 @@ cdef class State(object):
     cdef append_triangle(State self, long long triangle[3]):
         end = self.triangles.index.max() if self.triangles is not None else -1
         if self.triangle_idx > end:
-            self.triangles = pd.DataFrame(index=pd.RangeIndex(end + 1, end + 1 + self.chunk_size), columns=(0, 1, 2))
+            self.triangles = pd.DataFrame(index=pd.RangeIndex(end + 1, end + 1 + self.chunk_size), columns=(0, 1, 2), dtype=int, data=-1)
             self.triangles_0 = self.triangles[0].values
             self.triangles_1 = self.triangles[1].values
             self.triangles_2 = self.triangles[2].values
