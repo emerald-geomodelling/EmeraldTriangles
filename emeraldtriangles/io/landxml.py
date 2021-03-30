@@ -56,17 +56,32 @@ class LandXMLHandler(xml.sax.ContentHandler):
         end = self.vertices.index.max() if self.vertices is not None else -1
         if self.vertice_idx > end:
             self.vertices = pd.DataFrame(index=pd.RangeIndex(end + 1, end + 1 + self.chunk_size), columns=("Y", "X", "Z", "M"))
+            self.vertices_x = self.vertices["X"].values
+            self.vertices_y = self.vertices["Y"].values
+            self.vertices_z = self.vertices["Z"].values
+            self.vertices_m = self.vertices["M"].values
+            self.vertices_start = end + 1
             self.surface["vertices"].append(self.vertices)
-        self.vertices.loc[self.vertice_idx, ("Y", "X", "Z", "M")[:len(point)]] = point
+        self.vertices_y[self.vertice_idx - self.vertices_start] = point[0]
+        self.vertices_x[self.vertice_idx - self.vertices_start] = point[1]
+        if len(point) > 2:
+            self.vertices_z[self.vertice_idx - self.vertices_start] = point[2]
+            if len(point) > 3:
+                self.vertices_m[self.vertice_idx - self.vertices_start] = point[3]
         self.vertice_idx += 1
 
     def append_triangle(self, triangle):
         end = self.triangles.index.max() if self.triangles is not None else -1
         if self.triangle_idx > end:
             self.triangles = pd.DataFrame(index=pd.RangeIndex(end + 1, end + 1 + self.chunk_size), columns=(0, 1, 2))
+            self.triangles_0 = self.triangles[0].values
+            self.triangles_1 = self.triangles[1].values
+            self.triangles_2 = self.triangles[2].values
+            self.triangles_start = end + 1
             self.surface["triangles"].append(self.triangles)
-        self.triangles.loc[self.triangle_idx, (0, 1, 2)] = triangle
-        self.triangles.loc[self.triangle_idx] -= 1 # LandXML points are numbered from 1, not 0
+        self.triangles_0[self.triangle_idx - self.triangles_start] = triangle[0]-1 # LandXML points are numbered from 1, not 0
+        self.triangles_1[self.triangle_idx - self.triangles_start] = triangle[1]-1
+        self.triangles_2[self.triangle_idx - self.triangles_start] = triangle[2]-1
         self.triangle_idx += 1
 
 def parse(xmlfile):
