@@ -12,7 +12,7 @@ libraries = [a for a in (a.strip() for a in subprocess.check_output(
     ["pkg-config", "libxml-2.0", "--libs-only-l"]).decode("utf-8").split("-l")) if a]
 
 class get_numpy_include(object):
-    def __str__(self):
+    def __fspath__(self):
         import numpy
         return numpy.get_include()
 
@@ -31,7 +31,8 @@ setuptools.setup(
         "pandas",
         "scipy",
         "triangle",
-        "lxml"
+        "lxml",
+        "matplotlib",
     ],
     setup_requires=[
         'setuptools>=18.0',
@@ -40,8 +41,8 @@ setuptools.setup(
     ],
     ext_modules=[
         Extension(
-            'emeraldtriangles.io.landxml2',
-            sources=['emeraldtriangles/io/landxml2.pyx'],
+            'emeraldtriangles.io._landxml',
+            sources=['emeraldtriangles/io/_landxml.pyx'],
             include_dirs = include_dirs + [get_numpy_include()],
             library_dirs = library_dirs,
             libraries = libraries,
