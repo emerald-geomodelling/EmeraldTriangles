@@ -1,0 +1,2 @@
+include *.pxd
+include *.pyx

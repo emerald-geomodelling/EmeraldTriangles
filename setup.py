@@ -18,7 +18,7 @@ class get_numpy_include(object):
 
 setuptools.setup(
     name='emeraldtriangles',
-    version='0.0.5',
+    version='0.0.6',
     description='Triangle mesh transforms',
     long_description='Iteratively add points to an existing mesh, calculate mesh bounding polygons etc.',
     long_description_content_type="text/markdown",
@@ -39,6 +39,7 @@ setuptools.setup(
         'numpy',
         'cython',
     ],
+    package_data={'emeraldtriangles': ['*/*.pyx', '*/*.pxd']},
     ext_modules=[
         Extension(
             'emeraldtriangles.io._landxml',
