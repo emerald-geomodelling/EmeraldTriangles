@@ -3,6 +3,7 @@
 import setuptools
 import subprocess
 from setuptools import setup, Extension
+import numpy
 
 include_dirs = [a for a in (a.strip() for a in subprocess.check_output(
     ["pkg-config", "libxml-2.0", "--cflags-only-I"]).decode("utf-8").split("-I")) if a]
@@ -19,7 +20,7 @@ setuptools.setup(
     long_description='Iteratively add points to an existing mesh, calculate mesh bounding polygons etc.',
     long_description_content_type="text/markdown",
     author='Egil Moeller',
-    author_email='em@emeraldgeo.no',
+    author_email='em@emerld.no',
     url='https://github.com/EMeraldGeo/EmeraldTriangles',
     packages=setuptools.find_packages(),
     install_requires=[
@@ -37,7 +38,7 @@ setuptools.setup(
         Extension(
             'emeraldtriangles.io.landxml2',
             sources=['emeraldtriangles/io/landxml2.pyx'],
-            include_dirs = include_dirs,
+            include_dirs = include_dirs + [numpy.get_include()],
             library_dirs = library_dirs,
             libraries = libraries,
         ),
