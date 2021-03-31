@@ -3,6 +3,9 @@ import json
 import pandas as pd
 
 def split_extra_columns(df, index_columns, base_columns):
+    missing = set(index_columns + base_columns) - set(df.columns)
+    if missing:
+        df = df.assign(**{name:None for name in missing})
     base = df[index_columns + base_columns]
     extra = df[[name for name in df.columns
                 if name not in base_columns]
