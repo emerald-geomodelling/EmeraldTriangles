@@ -33,6 +33,7 @@ setuptools.setup(
         "triangle",
         "lxml",
         "matplotlib",
+        "shapely"
     ],
     setup_requires=[
         'setuptools>=18.0',

@@ -1,7 +1,8 @@
 import numpy as np
 import pandas as pd
 import scipy.spatial
-
+import shapely.geometry
+    
 from . import cleanup
 
 def mesh_boundary(**tri):
@@ -88,6 +89,15 @@ def mesh_boundary_to_pointlists(segments, **tri):
 
     return res
 
+def mesh_boundary_to_multipolygon(**tri):
+    boundaries = mesh_boundary_to_pointlists(**tri)
+    return shapely.geometry.MultiPolygon([
+        shapely.geometry.Polygon(
+            shapely.geometry.LineString(
+                tri["vertices"].loc[p][["X", "Y"]].values))
+        for p in boundaries.values()])
+
+    
 def vertices_boundary(**tri):
     segments = pd.DataFrame(
         scipy.spatial.ConvexHull(tri["vertices"][["X", "Y"]]).simplices,
