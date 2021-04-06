@@ -10,6 +10,7 @@ plotmod = sys.modules["triangle.plot"]
 def triangles(ax, vertices, triangles, zorder=-1, edgecolors="red", facecolors="green", cmap="viridis", **kw):
     args = [vertices["X"], vertices["Y"], triangles[[0, 1, 2]]]
     kwargs = {"zorder": zorder, "edgecolors": edgecolors, "cmap": cmap}
+    kwargs.update(kw.get("triangles_args", {}))
     if "facecolors" in triangles.columns:
         kwargs["facecolors"] = triangles["facecolors"].values
     elif "color" in vertices.columns:
@@ -24,6 +25,7 @@ def vertices(ax, **kw):
     verts = kw['vertices'][["X", "Y"]].values
 
     args = {}
+    args.update(kw.get("vertices_args", {}))
     if "color" in kw['vertices'].columns:
         args["c"] = kw['vertices']["color"].values
     else:
@@ -42,6 +44,7 @@ def points(ax, **kw):
     verts = kw['points'][["X", "Y"]].values
 
     args = {}
+    kwargs.update(kw.get("points_args", {}))
     if "color" in kw['points'].columns:
         args["c"] = kw['points']["color"].values
     else:
