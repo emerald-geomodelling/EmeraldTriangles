@@ -78,7 +78,7 @@ def supplant_triangles(existing_boundary=False, **tri):
                  + trivertices.loc[triangles[1]].values
                  + trivertices.loc[triangles[2]].values) / 3
         if "holes" in process_tri:
-            holes = np.append(process_tri["holes"], holes)
+            holes = np.append(process_tri["holes"], holes, axis=0)
         process_tri["holes"] = holes
 
     if existing_boundary:
@@ -94,7 +94,7 @@ def supplant_triangles(existing_boundary=False, **tri):
         
         holes = np.array([[xmin-10, ymin-10]])
         if "holes" in process_tri:
-            holes = np.append(process_tri["holes"], holes)
+            holes = np.append(process_tri["holes"], holes, axis=0)
         process_tri["holes"] = holes
 
     res.update(triangle.triangulate(process_tri, 'p'))

@@ -31,7 +31,7 @@ def reindex(points, faces):
     "Reindex points and faces so that they both have a natural/default index"
     
     faces = faces.reset_index(drop=True)
-    points = points.reset_index()
+    points = points.rename_axis(index="index").reset_index()
     replacements = points.rename(columns={"index": "old"}).reset_index().rename(columns={"index": "new"}).set_index("old")["new"]
     faces[0] = replacements.loc[faces[0]].values
     faces[1] = replacements.loc[faces[1]].values
