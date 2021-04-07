@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import scipy.spatial
 import shapely.geometry
+import warnings
     
 from . import cleanup
 
@@ -76,7 +77,7 @@ def _mesh_boundary_mark_rings(segments):
             
     return segments
 
-def mesh_boundary_to_pointlists(segments, **tri):
+def _mesh_boundary_to_pointlists(segments, **tri):
     segments = _mesh_boundary_mark_rings(segments)
     
     res = {}
@@ -89,13 +90,23 @@ def mesh_boundary_to_pointlists(segments, **tri):
 
     return res
 
-def mesh_boundary_to_multipolygon(**tri):
-    boundaries = mesh_boundary_to_pointlists(**tri)
+def mesh_boundary_to_pointlists(segments, **tri):
+    warnings.warn("Use mesh_boundary_rings() instead", DeprecationWarning)
+    return _mesh_boundary_to_pointlists(segments, **tri)
+    
+def mesh_boundary_rings(**tri):
+    tri["rings"] = mesh_boundary_to_pointlists(**tri)
+    return tri
+    
+def rings_multipolygon(coord_columns=["X", "Y"], **tri):
+    if "rings" not in tri:
+        tri = mesh_boundary(**tri)
+        tri = mesh_boundary_rings(**tri)
     return shapely.geometry.MultiPolygon([
         shapely.geometry.Polygon(
             shapely.geometry.LineString(
-                tri["vertices"].loc[p][["X", "Y"]].values))
-        for p in boundaries.values()])
+                tri["vertices"].loc[p][coord_columns].values))
+        for p in tri["rings"].values()])
 
     
 def vertices_boundary(**tri):

@@ -31,9 +31,14 @@ setuptools.setup(
         "pandas",
         "scipy",
         "triangle",
+
+        # Maybe make these optional?
+        "pandasio",
         "lxml",
         "matplotlib",
-        "shapely"
+        "shapely",
+        "geoalchemy2",
+        "pyproj"
     ],
     setup_requires=[
         'setuptools>=18.0',
