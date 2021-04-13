@@ -32,6 +32,8 @@ def dump(tri, filename):
         print('POINT_DATA', tri['vertices'].shape[0], file=fid)
         for attr in tri['vertices'].columns:
             if attr in ("X", "Y", "Z"): continue
+            dtype = tri["vertices"].dtypes[attr]
+            if not (dtype == float or dtype == int): continue
             print('SCALARS', attr, 'float 1', file=fid)
             print('LOOKUP_TABLE default', file=fid)
             np.savetxt(fid, tri['vertices'].loc[:, attr].to_numpy(), fmt='%f', delimiter=' ', newline='\n')
