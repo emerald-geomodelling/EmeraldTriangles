@@ -27,6 +27,7 @@ for
 
   * LandXML (import and export, no extra columns)
   * VTK (only export)
+  * SQL (import and export, same supported databases as pandas)
 
 # Documentation
 
