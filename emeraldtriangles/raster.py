@@ -3,6 +3,20 @@ import rasterio
 import pyproj
 
 def interpolate_from_raster(raster, col="topo", projection=None, **tri):
+    """Sample vertice data from a raster image. Coordinate reprojection is
+    done using the crs of the raster and the supplied projection or
+    tri["meta"]["projection"].
+
+    Parameters
+    -----------
+    raster : rasterio.io.DatasetReader
+      Raster to sample from.
+    col : str
+      Name of column to store sampled values in.
+    projection : int
+      CRS for the X and Y columns of the triangulation, optional.
+    """
+
     if projection is None:
         projection = tri["meta"]["projection"]
     #UTM convention is coordinate order Northing-Easting. CCh, 2020-06-18
