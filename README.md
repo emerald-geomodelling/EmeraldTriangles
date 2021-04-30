@@ -2,7 +2,7 @@
 
 # EmeraldTriangles
 
-This library provides transformations for triangle meshes built on top
+This library provides transformations for 2d triangle meshes built on top
 of
 [scipy.spatial.Delaunay](https://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.Delaunay.html)
 and [Triangle](https://rufat.be/triangle/):
@@ -26,8 +26,15 @@ In addition, EmeraldTriangles provides import and export functionality
 for
 
   * LandXML (import and export, no extra columns)
-  * VTK (only export)
   * SQL (import and export, same supported databases as pandas)
+  * [PyVista](https://docs.pyvista.org/) (Only export)
+    * VTK (only export)
+
+as well ass some data transforms
+
+  * Reprojection of coordinates using [pyproj](https://pyproj4.github.io/pyproj/stable/)
+  * Spatial interpolation (Kriging) of data using [scikit-gstat](https://scikit-gstat.readthedocs.io/)
+  * Sampling of data from a raster using [RasterIO](https://rasterio.readthedocs.io/en/latest/)
 
 # Documentation
 
