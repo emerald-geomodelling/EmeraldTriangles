@@ -60,6 +60,6 @@ def reproject(projection=None, projection_out=None, x_col="X", y_col="Y", x_col_
         projection_out = int(projection_out)
         #UTM convention is coordinate order Northing-Easting. CCh, 2020-06-18
         vertices.loc[filt, x_col_out], vertices.loc[filt, y_col_out]  = (
-            pyproj.Transformer.from_crs(projection, projection_out, always_xy=True).transform(
+            pyproj.Transformer.from_crs(int(projection), int(projection_out), always_xy=True).transform(
                 vertices.loc[filt, x_col].values, vertices.loc[filt, y_col].values))
     return tri
