@@ -2,10 +2,34 @@ import numpy as np
 import skgstat
 
 def interpolate(col, variograms, variogram_args={}, kriging_args={}, **tri):
+    """Interpolate vertice column data using scikit-gstat. Data is
+    interpolated from rows with non-NaN values to rows with NaN
+    values.
+    
+    Parameters
+    -----------
+
+    col : str
+      Name of column to interpolate
+    variograms : str
+      Dataframe with a column "variogram" (dtype object) containing
+      variogram descriptions and an index containing column names.
+      This dataframe can be empty (or not have a row for the requested
+      column), and if so will be populated with a new variogram.
+    variogram_args : dict
+      Extra arguments to skgstat.Variogram
+    kriging_args : dict
+      Extra arguments to skgstat.OrdinaryKriging
+    **tri
+      Triangulation to interpolate data over
+    """
     vertices = tri["vertices"]
 
     existing = ~np.isnan(vertices[col])
 
+    if "variogram" not in variograms.columns:
+        variograms["variogram"] = None
+    
     if col not in variograms.index:
         variogram = skgstat.Variogram(
             vertices.loc[existing, ["X", "Y"]].values, vertices.loc[existing, col].values, **variogram_args
