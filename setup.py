@@ -40,7 +40,8 @@ setuptools.setup(
         "matplotlib",
         "shapely",
         "geoalchemy2",
-        "pyproj"
+        "pyproj",
+        "pyvista"
     ],
     setup_requires=[
         'setuptools>=18.0',
