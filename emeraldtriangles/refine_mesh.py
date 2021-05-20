@@ -110,6 +110,9 @@ def supplant_triangles(existing_boundary=False, **tri):
     if len(new_points):
         res = interpolate_vertices(res, new_points)
 
+    if 'segments' in tri:
+        res['segments'] = pd.DataFrame(res['segments'])
+
     return res
 
 
