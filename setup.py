@@ -20,7 +20,7 @@ class get_numpy_include(object):
 
 setuptools.setup(
     name='emeraldtriangles',
-    version='0.0.11',
+    version='0.0.12',
     description='Triangle mesh transforms',
     long_description='Iteratively add points to an existing mesh, calculate mesh bounding polygons etc.',
     long_description_content_type="text/markdown",
