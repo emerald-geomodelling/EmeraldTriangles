@@ -17,10 +17,14 @@ class get_numpy_include(object):
     def __fspath__(self):
         import numpy
         return numpy.get_include()
+    def __getattr__(self, item):
+        return getattr(str(self),item)
+    def __add__(self, other):
+        return str(self)+other
 
 setuptools.setup(
     name='emeraldtriangles',
-    version='0.0.13',
+    version='0.0.14',
     description='Triangle mesh transforms',
     long_description='Iteratively add points to an existing mesh, calculate mesh bounding polygons etc.',
     long_description_content_type="text/markdown",
