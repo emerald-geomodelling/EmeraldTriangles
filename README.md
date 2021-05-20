@@ -30,7 +30,7 @@ for
   * [PyVista](https://docs.pyvista.org/) (Only export)
     * VTK (only export)
 
-as well ass some data transforms
+as well as some data transforms
 
   * Reprojection of coordinates using [pyproj](https://pyproj4.github.io/pyproj/stable/)
   * Spatial interpolation (Kriging) of data using [scikit-gstat](https://scikit-gstat.readthedocs.io/)

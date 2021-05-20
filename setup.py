@@ -12,6 +12,8 @@ libraries = [a for a in (a.strip() for a in subprocess.check_output(
     ["pkg-config", "libxml-2.0", "--libs-only-l"]).decode("utf-8").split("-l")) if a]
 
 class get_numpy_include(object):
+    def __str__(self):
+        return self.__fspath__()
     def __fspath__(self):
         import numpy
         return numpy.get_include()
