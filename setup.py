@@ -47,7 +47,8 @@ setuptools.setup(
         "pyproj",
         "pyvista",
         "scikit-gstat",
-        "bokeh"
+        "bokeh",
+        'rasterio',
     ],
     setup_requires=[
         'setuptools>=18.0',
