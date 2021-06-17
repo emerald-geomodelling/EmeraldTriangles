@@ -46,7 +46,7 @@ setuptools.setup(
         "geoalchemy2",
         "pyproj",
         "pyvista",
-        "skgstat"
+        "scikit-gstat"
     ],
     setup_requires=[
         'setuptools>=18.0',
