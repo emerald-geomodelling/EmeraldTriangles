@@ -46,7 +46,8 @@ setuptools.setup(
         "geoalchemy2",
         "pyproj",
         "pyvista",
-        "scikit-gstat"
+        "scikit-gstat",
+        "bokeh"
     ],
     setup_requires=[
         'setuptools>=18.0',
