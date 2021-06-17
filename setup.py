@@ -45,7 +45,8 @@ setuptools.setup(
         "shapely",
         "geoalchemy2",
         "pyproj",
-        "pyvista"
+        "pyvista",
+        "skgstat"
     ],
     setup_requires=[
         'setuptools>=18.0',
