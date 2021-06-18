@@ -42,3 +42,7 @@ Documentation is provided in the form of a [jupyter notebook with
 example
 usages](https://github.com/EMeraldGeo/EmeraldTriangles/blob/master/Example%20usage.ipynb)
 as well as in docstrings accesible with the python help() function.
+
+# Installation tips
+
+Users have experience issues with using the `setup.py develop` option due to some strange behaviour from cython. Using `pip` instead seems to do this trick. 
