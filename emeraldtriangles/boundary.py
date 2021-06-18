@@ -24,6 +24,7 @@ def mesh_boundary(**tri):
 
     if "segments" in tri:
         segments = tri["segments"].append(segments)
+        segments = segments.drop_duplicates([0, 1], keep='last', ignore_index=True)
         
     tri["segments"] = segments
     
