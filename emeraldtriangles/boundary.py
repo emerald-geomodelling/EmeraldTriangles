@@ -23,8 +23,11 @@ def mesh_boundary(**tri):
     segments = sides.drop_duplicates([0, 1], keep=False, ignore_index=True)
 
     if "segments" in tri:
-        segments = tri["segments"].append(segments)
-        segments = segments.drop_duplicates([0, 1], keep='last', ignore_index=True)
+        segments = tri["segments"].append(segments).reset_index().drop(columns=['index'])
+        segments.loc[:, 'vertex_set'] = segments.apply(lambda x: set([x.loc[0], x.loc[1]]), axis=1)
+        segments_unique = segments.vertex_set.astype('str').drop_duplicates(keep='last')
+        segments = segments.loc[segments_unique.index,[0,1,'triangle']]
+        segments = segments.drop_duplicates([0, 1], keep='last', ignore_index=True).reset_index().drop(columns=['index'])
         
     tri["segments"] = segments
     
