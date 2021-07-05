@@ -93,8 +93,8 @@ def read_sql(con, name, tri_id):
     vertices_columns = vertices_columns.pivot("vertex_id", "column", "value")
     triangles_columns = triangles_columns.pivot("triangle_id", "column", "value")
 
-    vertices = vertices.set_index("vertex_id").sort_index().join(vertices_columns)
-    triangles = triangles.set_index("triangle_id").sort_index().join(triangles_columns)
+    vertices = vertices.set_index("vertex_id").sort_index().join(vertices_columns, rsuffix='_duplicate')
+    triangles = triangles.set_index("triangle_id").sort_index().join(triangles_columns, rsuffix='_duplicate')
 
     triangles.columns = [int(col) if col in ("0", "1", "2") else col for col in triangles.columns]
 
