@@ -32,8 +32,11 @@ def interpolate_arrays(param_name, variograms, positions, values, new_positions,
     """
     if param_name not in variograms.index:
         logger.debug("...Generating variogram for %s..." % param_name)
-        variogram = skgstat.Variogram(positions, values, **variogram_args).describe()
-        variograms.loc[param_name] = {"variogram": {"type": "skgstat.Variogram", "values": variogram}}
+        variogram = skgstat.Variogram(positions, values, **variogram_args)
+        desc = variogram.describe()
+        desc["experimental"] = list(variogram.experimental)
+        desc["bins"] = list(variogram.bins)        
+        variograms.loc[param_name] = {"variogram": {"type": "skgstat.Variogram", "values": desc}}
     else:
         variogram = variograms.loc[param_name, "variogram"]["values"]
         
