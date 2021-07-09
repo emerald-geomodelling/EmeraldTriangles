@@ -44,7 +44,7 @@ def points(ax, **kw):
     verts = kw['points'][["X", "Y"]].values
 
     args = {}
-    kwargs.update(kw.get("points_args", {}))
+    args.update(kw.get("points_args", {}))
     if "color" in kw['points'].columns:
         args["c"] = kw['points']["color"].values
     else:

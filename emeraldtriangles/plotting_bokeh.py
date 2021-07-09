@@ -1,5 +1,8 @@
-import bokeh
-
+try:
+    import bokeh
+except:
+    pass
+    
 def colormap_default(color, column="color", fixed="red", palette="Inferno256", datasets=[]):
     datacolumn = False
     dataset = None
