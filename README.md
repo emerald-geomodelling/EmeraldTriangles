@@ -34,7 +34,8 @@ as well as some data transforms
 
   * Reprojection of coordinates using [pyproj](https://pyproj4.github.io/pyproj/stable/)
   * Spatial interpolation (Kriging) of data using [scikit-gstat](https://scikit-gstat.readthedocs.io/)
-  * Sampling of data from a raster using [RasterIO](https://rasterio.readthedocs.io/en/latest/)
+  * Sampling of data from a raster to triangulation vertices using [RasterIO](https://rasterio.readthedocs.io/en/latest/)
+  * Sampling of data from a triangulation to new point locations (linear interpolation between vertices of the surrounding triangle)
 
 # Documentation
 
