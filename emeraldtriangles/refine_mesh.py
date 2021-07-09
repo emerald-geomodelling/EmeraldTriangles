@@ -7,7 +7,11 @@ from . import cleanup
 from . import points_in_mesh
 from . import boundary
 
-def replace_triangles(points, vertices, triangles, **tri):
+def replace_triangles(points, vertices=None, triangles=None, **tri):
+    if vertices is None:
+        vertices = pd.DataFrame({"X": [], "Y": []})
+    if triangles is None:
+       triangles = pd.DataFrame({0: [], 1: [], 2:[]})
     vertices, triangles = cleanup.reindex(vertices, triangles)
     points_start = len(vertices)
     points_and_nodes = vertices.append(points).reset_index(drop=True)
@@ -60,6 +64,9 @@ def replace_triangles(points, vertices, triangles, **tri):
     return res
 
 def supplant_triangles(existing_boundary=False, **tri):
+    if "triangles" not in tri:
+        tri["triangles"] = pd.DataFrame({0: [], 1: [], 2:[]})        
+    
     tri = boundary.mesh_boundary(**tri)
     if not existing_boundary:
         tri = boundary.vertices_boundary(**tri)
