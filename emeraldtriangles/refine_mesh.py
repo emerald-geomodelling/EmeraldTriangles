@@ -23,6 +23,10 @@ def replace_triangles(points, vertices=None, triangles=None, **tri):
     
     points_and_triangles = points_in_mesh.points_in_triangles(points, vertices, triangles)
 
+    # remove duplicated coordinates to not create invalid geometries
+    duplicated_points = points.loc[points.duplicated(["X", "Y"])].index
+    points_and_triangles = points_and_triangles[~points_and_triangles.point.isin(duplicated_points)]
+    
     mask = np.zeros(triangles.index.shape, dtype="bool")
     mask[:] = 1
     triangles_with_points = np.unique(points_and_triangles["triangle"])
