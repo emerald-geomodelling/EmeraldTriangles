@@ -30,6 +30,12 @@ def interpolate_arrays(param_name, variograms, positions, values, new_positions,
     kriging_args : dict
       Extra arguments to skgstat.OrdinaryKriging
     """
+
+    if np.isnan(values).min():
+        return np.full(len(new_positions), np.nan), np.full(len(new_positions), np.nan)
+    elif np.nanmin(values) == np.nanmax(values):
+        return np.full(len(new_positions), np.nanmax(values)), np.full(len(new_positions), 0)
+        
     if param_name not in variograms.index:
         logger.debug("...Generating variogram for %s..." % param_name)
         variogram = skgstat.Variogram(positions, values, **variogram_args)
