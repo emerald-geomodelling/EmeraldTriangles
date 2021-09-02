@@ -13,6 +13,22 @@ def replace_triangles(points, vertices=None, triangles=None, **tri):
     if triangles is None:
        triangles = pd.DataFrame({0: [], 1: [], 2:[]})
     vertices, triangles = cleanup.reindex(vertices, triangles)
+
+    # remove duplicated coordinates to not create invalid geometries
+    # check first within points, then check if points overlap with any vertex in vertices
+    # TODO: Are there important data in the extra columns of `points` that we lose by dropping them?
+    #       Maybe the most proper approach would be to replace lines of `vertices` with those of `points`...
+    #       or at least users should have the choice of which one should be overwritten.
+    #       2021-09-02, Duke-of-Lizard
+    points = points.drop_duplicates(['X','Y'])
+
+    p_xy = points.loc[:, ['X', 'Y']]
+    v_xy = vertices.loc[:, ['X', 'Y']]
+    merged_pv = pd.merge(p_xy, v_xy, on=['X', 'Y'], how='left', indicator='indicator')
+    merged_pv['duplicated_flag'] = np.where(merged_pv.loc[:, 'indicator'] == 'both', True, False)
+    points = points[~ merged_pv['duplicated_flag']]
+
+
     points_start = len(vertices)
     points_and_nodes = vertices.append(points).reset_index(drop=True)
 
@@ -20,13 +36,13 @@ def replace_triangles(points, vertices=None, triangles=None, **tri):
     A = vertices.loc[triangles[0].values][["X", "Y"]].values
     B = vertices.loc[triangles[1].values][["X", "Y"]].values
     C = vertices.loc[triangles[2].values][["X", "Y"]].values
-    
+
+
+
+
     points_and_triangles = points_in_mesh.points_in_triangles(points, vertices, triangles)
 
-    # remove duplicated coordinates to not create invalid geometries
-    duplicated_points = points.loc[points.duplicated(["X", "Y"])].index
-    points_and_triangles = points_and_triangles[~points_and_triangles.point.isin(duplicated_points)]
-    
+
     mask = np.zeros(triangles.index.shape, dtype="bool")
     mask[:] = 1
     triangles_with_points = np.unique(points_and_triangles["triangle"])
