@@ -4,8 +4,12 @@ import pandas as pd
 def clean_triangles(points, faces, decimals = 10, offset=False):
     points = points.copy()
     faces = faces.copy()
-    points["Xp"] = np.floor(points["X"]* decimals + (0.5 if offset else 0))
-    points["Yp"] = np.floor(points["Y"]* decimals + (0.5 if offset else 0))
+    if decimals is None:
+        points["Xp"] = points["X"]
+        points["Yp"] = points["Y"]
+    else:
+        points["Xp"] = np.floor(points["X"]* decimals + (0.5 if offset else 0))
+        points["Yp"] = np.floor(points["Y"]* decimals + (0.5 if offset else 0))
 
     replacements = points.join(points.reset_index().groupby(["Xp", "Yp"])["index"].min().rename("new"), on=("Xp", "Yp"))["new"]
 
@@ -21,6 +25,8 @@ def clean_triangles(points, faces, decimals = 10, offset=False):
     
     # Rename so that points has a natural index (no gaps)
     points, faces = reindex(points, faces)
+
+    points = points.drop(columns=["Xp", "Yp"])
     
     # Remove z-size triangles
     faces = faces[(faces[0] != faces[1]) & (faces[0] != faces[2]) & (faces[1] != faces[2])]

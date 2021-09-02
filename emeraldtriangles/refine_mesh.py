@@ -70,7 +70,12 @@ def replace_triangles(points, vertices=None, triangles=None, **tri):
 def supplant_triangles(existing_boundary=False, **tri):
     if "triangles" not in tri:
         tri["triangles"] = pd.DataFrame({0: [], 1: [], 2:[]})        
-    
+
+    # Remove any duplicate vertices, or triangle.triangulate() is
+    # going to segfault!    
+    tri["vertices"], tri["triangles"] = cleanup.clean_triangles(
+        tri["vertices"], tri["triangles"], decimals = None)
+        
     tri = boundary.mesh_boundary(**tri)
     if not existing_boundary:
         tri = boundary.vertices_boundary(**tri)
@@ -108,6 +113,7 @@ def supplant_triangles(existing_boundary=False, **tri):
             holes = np.append(process_tri["holes"], holes, axis=0)
         process_tri["holes"] = holes
 
+    return process_tri
     res.update(triangle.triangulate(process_tri, 'p'))
     
     if "triangles" in tri:
