@@ -22,12 +22,7 @@ def replace_triangles(points, vertices=None, triangles=None, **tri):
     #       2021-09-02, Duke-of-Lizard
     points = points.drop_duplicates(['X','Y'])
 
-    p_xy = points.loc[:, ['X', 'Y']]
-    v_xy = vertices.loc[:, ['X', 'Y']]
-    merged_pv = pd.merge(p_xy, v_xy, on=['X', 'Y'], how='left', indicator='indicator')
-    merged_pv['duplicated_flag'] = np.where(merged_pv.loc[:, 'indicator'] == 'both', True, False)
-    points = points[~ merged_pv['duplicated_flag']]
-
+    points, vertices = cleanup.remove_overlapping_points_vertices(points, vertices, keep='points')
 
     points_start = len(vertices)
     points_and_nodes = vertices.append(points).reset_index(drop=True)

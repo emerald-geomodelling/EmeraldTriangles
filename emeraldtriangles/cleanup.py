@@ -63,3 +63,22 @@ def merge_tins(a, b):
     b_triangles[2] += points_start
     res["triangles"] = triangles.append(b_triangles).reset_index()
     return res
+
+def remove_overlapping_points_vertices(points, vertices, keep='points'):
+    p_xy = points.loc[:, ['X', 'Y']]
+    v_xy = vertices.loc[:, ['X', 'Y']]
+
+    merged_points = pd.merge(p_xy, v_xy, on=['X', 'Y'], how='left', indicator='indicator')
+    merged_points['duplicated_flag'] = np.where(merged_points.loc[:, 'indicator'] == 'both', True, False)
+
+    if keep in ('points','p'):
+        merged_vertices = pd.merge(v_xy, points, on=['X', 'Y'], how='left', indicator='indicator')
+        merged_vertices['duplicated_flag'] = np.where(merged_vertices.loc[:, 'indicator'] == 'both', True, False)
+
+    elif keep in ('vertices','v'):
+
+        points = points.loc[~ merged_points['duplicated_flag'].values]
+    else:
+        ValueError('value of "keep" parameter set to %s, but must be one of ("vertices","points","v","p")'%(str(keep)))
+
+    return points, vertices
