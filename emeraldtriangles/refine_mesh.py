@@ -20,7 +20,7 @@ def replace_triangles(points, vertices=None, triangles=None, **tri):
     #       Maybe the most proper approach would be to replace lines of `vertices` with those of `points`...
     #       or at least users should have the choice of which one should be overwritten.
     #       2021-09-02, Duke-of-Lizard
-    points = points.drop_duplicates(['X','Y'])
+    points = points.drop_duplicates(['X','Y']).reset_index(drop=True)
 
     points, vertices = cleanup.remove_overlapping_points_vertices(points, vertices, keep='points')
 
