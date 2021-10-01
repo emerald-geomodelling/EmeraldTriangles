@@ -179,8 +179,10 @@ def interpolate_vertices(tri, to_interpolate_idxs):
 
     interpolated = segments3.div(segments3["segment_weight"], axis=0)
 
+    no_interpolation = set(("X", "Y")).union(set(tri.get("no_interpolation", ())))
+    
     res = dict(tri)
     res["vertices"] = res["vertices"].copy()
-    cols = set(interpolated.columns).intersection(set(tri["vertices"].columns)) - set(("X", "Y"))
+    cols = set(interpolated.columns).intersection(set(tri["vertices"].columns)) - no_interpolation
     res["vertices"].loc[interpolated.index, cols] = interpolated[cols]
     return res
