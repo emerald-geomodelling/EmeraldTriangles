@@ -22,7 +22,7 @@ def interpolate_from_raster(raster, col="topo", projection=None, **tri):
     #UTM convention is coordinate order Northing-Easting. CCh, 2020-06-18
     xy = np.column_stack(
         pyproj.Transformer.from_crs(int(projection), raster.crs.to_epsg(), always_xy=True
-        ).transform(tri["vertices"]["X"], tri["vertices"]["Y"]))
+        ).transform(tri["vertices"]["X"].values, tri["vertices"]["Y"].values))
     
     filt = (  (xy[:,0] >= raster.bounds.left) & (xy[:,0] <= raster.bounds.right)
             & (xy[:,1] >= raster.bounds.bottom) & (xy[:,1] <= raster.bounds.top))
