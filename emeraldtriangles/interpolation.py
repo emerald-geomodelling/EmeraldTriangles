@@ -148,28 +148,28 @@ def sample_from_triangulation(col, col_output = None, **tri):
     **tri
       Triangulation to interpolate data over
     """
+
     if col_output is None:
         col_output = col
-    tri = {'vertices':vertices, 'triangles':triangles,'points':points}
 
-    points_and_triangles = points_in_triangles(**original_tin)
+    points_and_triangles = points_in_triangles(**tri)
 
-    filter_ = points_and_triangles["triangle"] != -1
+    mask_points_non_overlap = points_and_triangles["triangle"] != -1
 
     # Get X, Y coordinates and Z values of vertices for relevant triangles
     tri_vert = tri['triangles'].loc[points_and_triangles.triangle.values, :]
     tri_vert_np = tri_vert.loc[:, [0, 1, 2]].values
 
-    xt = original_tin['vertices'].X.values
-    yt = original_tin['vertices'].Y.values
-    zt = original_tin['vertices'].loc[:,col].values
+    xt = tri['vertices'].X.values
+    yt = tri['vertices'].Y.values
+    zt = tri['vertices'].loc[:,col].values
 
-    xp = original_tin['points'].X.values
-    yp = original_tin['points'].Y.values
+    xp = tri['points'].X.values
+    yp = tri['points'].Y.values
 
     zp = barycentric_interpolation(xt,yt,zt, tri_vert_np,xp,yp)
 
-    points.loc[:      , col_output] = zp
-    points.loc[filter_, col_output] = np.nan
+    tri['points'].loc[ :                      , col_output] = zp
+    tri['points'].loc[ mask_points_non_overlap, col_output] = np.nan
 
     return tri
