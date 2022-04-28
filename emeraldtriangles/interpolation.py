@@ -1,6 +1,7 @@
 import numpy as np
 import skgstat
 import logging
+from .points_in_mesh import points_in_triangles
 
 logger = logging.getLogger(__name__)
 
@@ -103,4 +104,75 @@ def interpolate(col, variograms, variogram_args={}, kriging_args={}, **tri):
 
     tri["meta"]["columns"][col].update({"variogram": variogram_args, "kriging": kriging_args})
     
+    return tri
+
+
+def barycentric_interpolation(xt,yt,zt, triangles, xp,yp):
+
+    X_tri = xt[triangles]
+    Y_tri = yt[triangles]
+    Z_tri = zt[triangles]
+
+    # compute Barycentric weights of each vertex for every query point, then compute Z
+    Y1 = Y_tri[:, 1]
+    Y2 = Y_tri[:, 2]
+    Y3 = Y_tri[:, 0]
+
+    X1 = X_tri[:, 1]
+    X2 = X_tri[:, 2]
+    X3 = X_tri[:, 0]
+
+    Px = xp
+    Py = yp
+
+    wv1 = ((Y2 - Y3) * (Px - X3) + (X3 - X2) * (Py - Y3)) / ((Y2 - Y3) * (X1 - X3) + (X3 - X2) * (Y1 - Y3))
+    wv2 = ((Y3 - Y1) * (Px - X3) + (X1 - X3) * (Py - Y3)) / ((Y2 - Y3) * (X1 - X3) + (X3 - X2) * (Y1 - Y3))
+    wv3 = 1 - wv2 - wv1
+
+    Pz = wv1 * Z_tri[:, 1] + wv2 * Z_tri[:, 2] + wv3 * Z_tri[:, 0]
+    return Pz
+
+def sample_from_triangulation(col, col_output = None, **tri):
+    """Interpolate vertices column data using barycentric interpolation.
+    In other words, sample values from the existing triangles at points locations.
+
+    Point not overlapping with the triangles get set to 0
+
+    Parameters
+    -----------
+
+    col : str
+      Name of column on vertices to interpolate
+    col_output : str
+      Name of column on points where output will be stored. By default, set to same as col
+    **tri
+      Triangulation to interpolate data over
+    """
+
+    if col_output is None:
+        col_output = col
+
+    points_and_triangles = points_in_triangles(**tri)
+
+    mask_points_overlap = points_and_triangles["triangle"] != -1
+
+    points_masked = tri['points'].iloc[points_and_triangles.loc[mask_points_overlap, 'point']]
+    points_and_triangles_masked = points_and_triangles[mask_points_overlap]
+
+
+    tri_vert = tri['triangles'].iloc[points_and_triangles_masked.triangle.values, :]
+    tri_vert_np = tri_vert.loc[:, [0, 1, 2]].values
+
+    xt = tri['vertices'].X.values
+    yt = tri['vertices'].Y.values
+    zt = tri['vertices'].loc[:, col].values
+
+    xp = points_masked.X.values
+    yp = points_masked.Y.values
+
+    zp = barycentric_interpolation(xt, yt, zt, tri_vert_np, xp, yp)
+
+    tri['points'].loc[points_masked.index, col_output] = zp
+
+
     return tri
