@@ -132,9 +132,24 @@ def barycentric_interpolation(xt,yt,zt, triangles, xp,yp):
     Pz = wv1 * Z_tri[:, 1] + wv2 * Z_tri[:, 2] + wv3 * Z_tri[:, 0]
     return Pz
 
-def sample_from_triangulation(param_name, vertices, triangles, points, param_name_output = None):
-    if param_name_output is None:
-        param_name_output = param_name
+def sample_from_triangulation(col, col_output = None, **tri):
+    """Interpolate vertices column data using barycentric interpolation.
+    In other words, sample values from the existing triangles at points locations.
+
+    Point not overlapping with the triangles get set to 0
+
+    Parameters
+    -----------
+
+    col : str
+      Name of column on vertices to interpolate
+    col_output : str
+      Name of column on points where output will be stored. By default, set to same as col
+    **tri
+      Triangulation to interpolate data over
+    """
+    if col_output is None:
+        col_output = col
     tri = {'vertices':vertices, 'triangles':triangles,'points':points}
 
     points_and_triangles = points_in_triangles(**original_tin)
@@ -147,12 +162,14 @@ def sample_from_triangulation(param_name, vertices, triangles, points, param_nam
 
     xt = original_tin['vertices'].X.values
     yt = original_tin['vertices'].Y.values
-    zt = original_tin['vertices'].loc[:,param_name].values
+    zt = original_tin['vertices'].loc[:,col].values
 
     xp = original_tin['points'].X.values
     yp = original_tin['points'].Y.values
 
     zp = barycentric_interpolation(xt,yt,zt, tri_vert_np,xp,yp)
 
-    points.loc[:      , param_name_output] = zp
-    points.loc[filter_, param_name_output] = np.nan
+    points.loc[:      , col_output] = zp
+    points.loc[filter_, col_output] = np.nan
+
+    return tri
