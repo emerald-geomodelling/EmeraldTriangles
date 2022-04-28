@@ -154,10 +154,9 @@ def sample_from_triangulation(col, col_output = None, **tri):
 
     points_and_triangles = points_in_triangles(**tri)
 
-    mask_points_non_overlap = points_and_triangles["triangle"] != -1
-
+    mask_points_non_overlap = points_and_triangles["triangle"] == -1
     # Get X, Y coordinates and Z values of vertices for relevant triangles
-    tri_vert = tri['triangles'].loc[points_and_triangles.triangle.values, :]
+    tri_vert = tri['triangles'].iloc[points_and_triangles.triangle.values, :]
     tri_vert_np = tri_vert.loc[:, [0, 1, 2]].values
 
     xt = tri['vertices'].X.values
