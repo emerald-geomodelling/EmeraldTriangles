@@ -159,7 +159,7 @@ def sample_from_triangulation(col, col_output = None, **tri):
     points_masked = tri['points'].iloc[points_and_triangles.loc[mask_points_overlap, 'point']]
     points_and_triangles_masked = points_and_triangles[mask_points_overlap]
 
-    # Get X, Y coordinates and Z values of vertices for relevant triangles
+
     tri_vert = tri['triangles'].iloc[points_and_triangles_masked.triangle.values, :]
     tri_vert_np = tri_vert.loc[:, [0, 1, 2]].values
 
@@ -173,6 +173,6 @@ def sample_from_triangulation(col, col_output = None, **tri):
     zp = barycentric_interpolation(xt, yt, zt, tri_vert_np, xp, yp)
 
     tri['points'].loc[points_masked.index, col_output] = zp
-    # tri['points'].iloc[mask_points_non_overlap.values].loc[:, col_output] = np.nan
+
 
     return tri
