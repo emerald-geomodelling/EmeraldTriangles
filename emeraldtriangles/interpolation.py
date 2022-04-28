@@ -169,6 +169,6 @@ def sample_from_triangulation(col, col_output = None, **tri):
     zp = barycentric_interpolation(xt,yt,zt, tri_vert_np,xp,yp)
 
     tri['points'].loc[ :                      , col_output] = zp
-    tri['points'].loc[ mask_points_non_overlap, col_output] = np.nan
+    tri['points'].iloc[ mask_points_non_overlap.values].loc[:, col_output] = np.nan
 
     return tri
