@@ -82,25 +82,26 @@ def interpolate(col, variograms, variogram_args={}, kriging_args={}, **tri):
 
     existing = ~np.isnan(vertices[col])
 
-    if "variogram" not in variograms.columns:
-        variograms["variogram"] = None
+    if existing.sum() > 0 and (~existing).sum() > 0:
+        if "variogram" not in variograms.columns:
+            variograms["variogram"] = None
 
-    values, variance = interpolate_arrays(
-        col,
-        variograms,
-        vertices.loc[existing, ["X", "Y"]].values,
-        vertices.loc[existing, col].values,
-        vertices.loc[~existing, ["X", "Y"]].values,
-        variogram_args,
-        kriging_args)
+        values, variance = interpolate_arrays(
+            col,
+            variograms,
+            vertices.loc[existing, ["X", "Y"]].values,
+            vertices.loc[existing, col].values,
+            vertices.loc[~existing, ["X", "Y"]].values,
+            variogram_args,
+            kriging_args)
 
-    vertices.loc[~existing, col] = values
-    vertices.loc[~existing, col + '_kriging_uncertainty'] = variance
+        vertices.loc[~existing, col] = values
+        vertices.loc[~existing, col + '_kriging_uncertainty'] = variance
 
-    if "meta" not in tri: tri["meta"] = {}
-    if "columns" not in tri["meta"]: tri["meta"]["columns"] = {}
-    if col not in tri["meta"]["columns"]: tri["meta"]["columns"][col] = {}
+        if "meta" not in tri: tri["meta"] = {}
+        if "columns" not in tri["meta"]: tri["meta"]["columns"] = {}
+        if col not in tri["meta"]["columns"]: tri["meta"]["columns"][col] = {}
 
-    tri["meta"]["columns"][col].update({"variogram": variogram_args, "kriging": kriging_args})
+        tri["meta"]["columns"][col].update({"variogram": variogram_args, "kriging": kriging_args})
     
     return tri
