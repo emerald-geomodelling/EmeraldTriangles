@@ -3,7 +3,7 @@ import numpy as np
 
 cimport numpy as np
 cimport cpython.bytes
-cimport libxml
+from . cimport libxml
 
 cdef extern from "string.h":
     int strcmp(char* str1, char* str2)
