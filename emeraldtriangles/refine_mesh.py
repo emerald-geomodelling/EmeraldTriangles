@@ -171,6 +171,9 @@ def interpolate_vertices(tri, to_interpolate_idxs):
     segments2["segment_weight"] = 1. / segments2["segment_length"]
     segments2 = segments2[~segments2[0].isin(new_points)]
 
+    # We can only interpolate floats...
+    segments2 = segments2[segments2.dtypes.index[segments2.dtypes == float]]
+    
     segments3 = segments2.mul(
         segments2["segment_weight"], axis=0
     ).assign(
