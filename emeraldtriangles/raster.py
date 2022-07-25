@@ -28,7 +28,7 @@ def interpolate_from_raster(raster, col="topo", projection=None, **tri):
             & (xy[:,1] >= raster.bounds.bottom) & (xy[:,1] <= raster.bounds.top))
     filt = tri["vertices"].index[filt].values
 
-    sampled = np.array(list(raster.sample(xy[filt,:])))[:,0]
+    sampled = np.array(list(raster.sample([tuple(l) for l in xy[filt,:]])))[:,0]
     datafilt = ~np.isin(sampled, raster.get_nodatavals())
 
     filt = filt[datafilt]
