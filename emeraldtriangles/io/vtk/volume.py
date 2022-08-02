@@ -48,6 +48,7 @@ def to_meshdata(tin, layer_depths, x_col="X", y_col="Y", z_col="Z"):
 
     # Remove vertices with no z coord (and triangles using them)
     v_index_name = vertices.index.name
+    if v_index_name is None: v_index_name='index'
     vertices = vertices.loc[~vertices[z_col].isna()].reset_index()
     index_mapping = vertices[[v_index_name]].rename(columns={v_index_name : "old_index"}).reset_index().set_index("old_index")["index"]
     triangles = triangles.loc[triangles[0].isin(index_mapping.index)
@@ -131,7 +132,8 @@ def to_meshdata(tin, layer_depths, x_col="X", y_col="Y", z_col="Z"):
         "cells": cells_out_vtk,
         "celltypes": cell_types_out_vtk,
         "points": point_coordinates,
-        "point_arrays": df
+        "point_arrays": df,
+        "cell_arrays":df_cell
     }
 
 def to_pyvista(tin, *arg, **kw):
@@ -141,4 +143,8 @@ def to_pyvista(tin, *arg, **kw):
         if meshdata["point_arrays"][col].dtype == object:
             continue
         m.point_arrays[col] = meshdata["point_arrays"][col]
+    for col in meshdata["cell_arrays"].columns:
+        if meshdata["cell_arrays"][col].dtype != float:
+            continue
+        m.cell_arrays[col] = meshdata["cell_arrays"][col]
     return m
