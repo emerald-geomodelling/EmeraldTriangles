@@ -129,8 +129,11 @@ def polygon_to_boundary(poly, **tri):
         boundary_geoms = [poly.boundary]
 
     for boundary in boundary_geoms:
+        columns = ['X','Y']
+        if boundary.has_z:
+            columns = ['X','Y', 'Z']
         tri["vertices"], tri["triangles"], start = cleanup.append_nodes(
-            pd.DataFrame(np.array(boundary.coords[:-1]), columns=["X", "Y"]),
+            pd.DataFrame(np.array(boundary.coords[:-1]), columns=columns),
             tri["vertices"], tri["triangles"])
 
         segments = start + np.append(np.arange(len(boundary.coords) - 1), [0])
