@@ -11,7 +11,11 @@ def clean_triangles(points, faces, decimals = 10, offset=False):
         points["Xp"] = np.floor(points["X"]* decimals + (0.5 if offset else 0))
         points["Yp"] = np.floor(points["Y"]* decimals + (0.5 if offset else 0))
 
-    replacements = points.join(points.reset_index().groupby(["Xp", "Yp"])["index"].min().rename("new"), on=("Xp", "Yp"))["new"]
+    index_name = 'index'
+    if points.index.name is not None:
+        index_name = points.index.name
+
+    replacements = points.join(points.reset_index().groupby(["Xp", "Yp"])[index_name].min().rename("new"), on=("Xp", "Yp"))["new"]
 
     # Merge points that are close to each other
     faces[0] = replacements.loc[faces[0]].values
@@ -19,7 +23,7 @@ def clean_triangles(points, faces, decimals = 10, offset=False):
     faces[2] = replacements.loc[faces[2]].values
 
     replacements = replacements.reset_index()
-    keep = replacements[replacements["index"] == replacements["new"]]
+    keep = replacements[replacements[index_name] == replacements["new"]]
     
     points = points.loc[keep["new"]]
     
@@ -90,19 +94,29 @@ def remove_unused_vertices(**tri):
     """
     v_indices_orig = tri['vertices'].index.values
     t_vertices_orig = tri['triangles'].loc[:,[0,1,2]].values
+    if 'segments' in tri.keys():
+        segments_set = set(tri['segments'].loc[:,[0,1,]].values.flatten())
+    else:
+        segments_set = set()
 
-    used_indices = set(v_indices_orig) & set(t_vertices_orig.flatten())
+    used_indices = set(v_indices_orig) &  (set(t_vertices_orig.flatten()) | segments_set)
 
     v_subset = tri['vertices'].loc[list(used_indices)]
     v_subset = v_subset.reset_index().rename(columns={'index': 'index_orig'})
 
     new_index_mapping =dict(zip(v_subset.index_orig.values,v_subset.index.values))
 
-    tri_copy = tri['triangles'].loc[:,[0,1,2]].copy()
-    for col in tri_copy.columns:
-        tri_copy[col] = tri_copy[col].map(new_index_mapping)
+    triangles_copy = tri['triangles'].loc[:,[0,1,2]].copy()
+    for col in triangles_copy.columns:
+        triangles_copy[col] = triangles_copy[col].map(new_index_mapping)
+        
+    if 'segments' in tri.keys():
+        segments_copy = tri['segments'].loc[:, [0, 1]].copy()
+        for col in segments_copy.columns:
+            segments_copy[col] = segments_copy[col].map(new_index_mapping)
+        tri['segments'].loc[:, [0, 1]] = segments_copy
 
     tri['vertices'] = v_subset
-    tri['triangles'].loc[:, [0, 1, 2]] = tri_copy
+    tri['triangles'].loc[:, [0, 1, 2]] = triangles_copy
 
     return tri
