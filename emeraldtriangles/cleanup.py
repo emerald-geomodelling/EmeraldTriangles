@@ -82,3 +82,27 @@ def remove_overlapping_points_vertices(points, vertices, keep='points'):
         ValueError('value of "keep" parameter set to %s, but must be one of ("vertices","points","v","p")'%(str(keep)))
 
     return points, vertices
+
+def remove_unused_vertices(**tri):
+    """
+    After triangulation, if there are vertices that are unsused in the triangulation, this function will remove them and
+    recompute the appropriate index pointers linking 'triangles' and 'vertices'.
+    """
+    v_indices_orig = tri['vertices'].index.values
+    t_vertices_orig = tri['triangles'].loc[:,[0,1,2]].values
+
+    used_indices = set(v_indices_orig) & set(t_vertices_orig.flatten())
+
+    v_subset = tri['vertices'].loc[list(used_indices)]
+    v_subset = v_subset.reset_index().rename(columns={'index': 'index_orig'})
+
+    new_index_mapping =dict(zip(v_subset.index_orig.values,v_subset.index.values))
+
+    tri_copy = tri['triangles'].loc[:,[0,1,2]].copy()
+    for col in tri_copy.columns:
+        tri_copy[col] = tri_copy[col].map(new_index_mapping)
+
+    tri['vertices'] = v_subset
+    tri['triangles'].loc[:, [0, 1, 2]] = tri_copy
+
+    return tri
