@@ -2,7 +2,7 @@ import numpy as np
 import rasterio
 import pyproj
 
-def interpolate_from_raster(raster, col="topo", projection=None, **tri):
+def interpolate_from_raster(raster, col="topo", projection=None, overwrite_existing=True, **tri):
     """Sample vertice data from a raster image. Coordinate reprojection is
     done using the crs of the raster and the supplied projection or
     tri["meta"]["projection"].
@@ -26,7 +26,10 @@ def interpolate_from_raster(raster, col="topo", projection=None, **tri):
     
     filt = (  (xy[:,0] >= raster.bounds.left) & (xy[:,0] <= raster.bounds.right)
             & (xy[:,1] >= raster.bounds.bottom) & (xy[:,1] <= raster.bounds.top))
+    if not overwrite_existing:
+        filt = filt & tri['vertices'][col].isna().values
     filt = tri["vertices"].index[filt].values
+
 
     sampled = np.array(list(raster.sample([tuple(l) for l in xy[filt,:]])))[:,0]
     datafilt = ~np.isin(sampled, raster.get_nodatavals())
