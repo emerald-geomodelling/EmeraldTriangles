@@ -47,17 +47,18 @@ def interpolate_arrays(param_name, variograms, positions, values, new_positions,
         return interpolate_arrays_kriging(param_name, variograms, positions, values, new_positions, variogram_args, kriging_args)
     elif method == "linear":
         res = scipy.interpolate.griddata(positions, values, new_positions)
-        # Fake variance as 0 everywhere
+        # Placeholder variance of np.nan everywhere
         return res, res * np.nan
     elif method == "cubic":
         res = scipy.interpolate.griddata(positions, values, new_positions, method="cubic")
-        # Fake variance as 0 everywhere
+        # Placeholder variance of np.nan everywhere
         return res, res * np.nan
     elif method == "spline":
         res = scipy.interpolate.SmoothBivariateSpline(
             positions[:,0], positions[:,1], values, s=0
         )(
             new_positions[:,0], new_positions[:,1], grid=False)
+        # Placeholder variance of np.nan everywhere
         return res, res * np.nan
     else:
         raise NotImplementedError("Unknown interpolation method %s..." % (method,))
