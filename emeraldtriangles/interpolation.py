@@ -48,17 +48,17 @@ def interpolate_arrays(param_name, variograms, positions, values, new_positions,
     elif method == "linear":
         res = scipy.interpolate.griddata(positions, values, new_positions)
         # Fake variance as 0 everywhere
-        return res, res * 0.0
+        return res, res * np.nan
     elif method == "cubic":
         res = scipy.interpolate.griddata(positions, values, new_positions, method="cubic")
         # Fake variance as 0 everywhere
-        return res, res * 0.0
+        return res, res * np.nan
     elif method == "spline":
         res = scipy.interpolate.SmoothBivariateSpline(
             positions[:,0], positions[:,1], values, s=0
         )(
             new_positions[:,0], new_positions[:,1], grid=False)
-        return res, res * 0.0
+        return res, res * np.nan
     else:
         raise NotImplementedError("Unknown interpolation method %s..." % (method,))
 
