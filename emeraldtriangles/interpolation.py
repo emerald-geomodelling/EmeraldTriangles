@@ -66,7 +66,7 @@ def interpolate_arrays(param_name, variograms, positions, values, new_positions,
  
 def interpolate_arrays_kriging(param_name, variograms, positions, values, new_positions, variogram_args={}, kriging_args={}):
     if param_name not in variograms.index:
-        logger.debug("...Generating variogram for %s..." % param_name)
+        logger.debug(f"...Generating variogram for  {param_name}...")
         variogram = skgstat.Variogram(positions, values, **variogram_args)
         desc = variogram.describe()
         desc["experimental"] = list(variogram.experimental)
