@@ -39,7 +39,7 @@ def clean_triangles(points, faces, decimals = 10, offset=False):
 
 def reindex(points, faces):
     "Reindex points and faces so that they both have a natural/default index"
-    
+    index_name = points.index.name
     faces = faces.reset_index(drop=True)
     points = points.rename_axis(index="index").reset_index()
     replacements = points.rename(columns={"index": "old"}).reset_index().rename(columns={"index": "new"}).set_index("old")["new"]
@@ -48,6 +48,7 @@ def reindex(points, faces):
     faces[2] = replacements.loc[faces[2]].values
     
     points = points.drop(columns=["index"])
+    points = points.rename_axis(index=index_name)
     return points, faces
 
 def append_nodes(points, vertices, triangles):
