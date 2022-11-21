@@ -13,6 +13,7 @@ def distance_to_data(col, x_col="X", y_col="Y", **tri):
     XB = tri["vertices"].loc[filt][[x_col,y_col]].values
     if len(XB):
         tri["vertices"].loc[filt,'%s_dist' % col] = 0.0
-        tri["vertices"].loc[~filt,'%s_dist' % col] = np.min(scipy.spatial.distance.cdist(XA, XB),axis=1)
+        d, i = cKDTree(XB).query(XA)
+        tri["vertices"].loc[~filt,'%s_dist' % col] = d
 
     return tri
