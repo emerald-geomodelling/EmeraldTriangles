@@ -1,6 +1,9 @@
 import numpy as np
 import pandas as pd
 
+import logging
+logger = logging.getLogger(__name__)
+
 def point_in_triangle(P, A,B,C):   
     v0 = C - A
     v1 = B - A
@@ -22,7 +25,9 @@ def points_in_triangle(PS, A,B,C):
     mi = np.minimum(np.minimum(A, B), C)
     ma = np.maximum(np.maximum(A, B), C)
 
-    for P in PS:
+    for count, P in enumerate(PS):
+        if count%1000 == 0:
+            logger.info(f"points_in_triangle: working on point {count+1} out of {PS.shape[0]}...")
         bboxfilter = np.where(np.all(P >= mi, axis=1) & np.all(P <= ma, axis=1))[0]
         a, b, c = A[bboxfilter], B[bboxfilter], C[bboxfilter]        
         matches = point_in_triangle(P, a,b,c)
@@ -45,4 +50,5 @@ def points_in_triangles(points, vertices, triangles, **kw):
     points_and_triangles = pd.DataFrame([
         (idx, matches[0] if len(matches) > 0 else -1)
         for idx, matches in enumerate(points_in_triangle(P, A, B, C))], columns = ["point", "triangle"], dtype = np.int)
+    logger.info(f"points_in_triangles: completed")
     return points_and_triangles

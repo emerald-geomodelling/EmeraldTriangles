@@ -47,25 +47,26 @@ def interpolate_arrays(param_name, variograms, positions, values, new_positions,
         return interpolate_arrays_kriging(param_name, variograms, positions, values, new_positions, variogram_args, kriging_args)
     elif method == "linear":
         res = scipy.interpolate.griddata(positions, values, new_positions)
-        # Fake variance as 0 everywhere
-        return res, res * 0.0
+        # Placeholder variance of np.nan everywhere
+        return res, res * np.nan
     elif method == "cubic":
         res = scipy.interpolate.griddata(positions, values, new_positions, method="cubic")
-        # Fake variance as 0 everywhere
-        return res, res * 0.0
+        # Placeholder variance of np.nan everywhere
+        return res, res * np.nan
     elif method == "spline":
         res = scipy.interpolate.SmoothBivariateSpline(
             positions[:,0], positions[:,1], values, s=0
         )(
             new_positions[:,0], new_positions[:,1], grid=False)
-        return res, res * 0.0
+        # Placeholder variance of np.nan everywhere
+        return res, res * np.nan
     else:
         raise NotImplementedError("Unknown interpolation method %s..." % (method,))
 
  
 def interpolate_arrays_kriging(param_name, variograms, positions, values, new_positions, variogram_args={}, kriging_args={}):
     if param_name not in variograms.index:
-        logger.debug("...Generating variogram for %s..." % param_name)
+        logger.debug(f"...Generating variogram for  {param_name}...")
         variogram = skgstat.Variogram(positions, values, **variogram_args)
         desc = variogram.describe()
         desc["experimental"] = list(variogram.experimental)

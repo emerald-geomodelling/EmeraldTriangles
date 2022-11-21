@@ -24,12 +24,12 @@ class get_numpy_include(object):
 
 setuptools.setup(
     name='emeraldtriangles',
-    version='0.0.24',
+    version='0.0.28',
     description='Triangle mesh transforms',
     long_description='Iteratively add points to an existing mesh, calculate mesh bounding polygons etc.',
     long_description_content_type="text/markdown",
-    author='Egil Moeller',
-    author_email='em@emerld.no',
+    author='Egil Moeller, Craig W. Christensen, et al.',
+    author_email='em@emrld.no',
     url='https://github.com/EMeraldGeo/EmeraldTriangles',
     packages=setuptools.find_packages(),
     install_requires=[
