@@ -93,6 +93,11 @@ def remove_unused_vertices(**tri):
     After triangulation, if there are vertices that are unsused in the triangulation, this function will remove them and
     recompute the appropriate index pointers linking 'triangles' and 'vertices'.
     """
+
+    index_name = 'index'
+    if tri['vertices'].index.name is not None:
+        index_name = tri['vertices'].index.name
+
     v_indices_orig = tri['vertices'].index.values
     t_vertices_orig = tri['triangles'].loc[:,[0,1,2]].values
     if 'segments' in tri.keys():
@@ -103,7 +108,7 @@ def remove_unused_vertices(**tri):
     used_indices = set(v_indices_orig) &  (set(t_vertices_orig.flatten()) | segments_set)
 
     v_subset = tri['vertices'].loc[list(used_indices)]
-    v_subset = v_subset.reset_index().rename(columns={'index': 'index_orig'})
+    v_subset = v_subset.reset_index().rename(columns={index_name: 'index_orig'})
 
     new_index_mapping =dict(zip(v_subset.index_orig.values,v_subset.index.values))
 
