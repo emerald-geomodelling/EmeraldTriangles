@@ -97,6 +97,7 @@ def remove_unused_vertices(**tri):
     index_name = 'index'
     if tri['vertices'].index.name is not None:
         index_name = tri['vertices'].index.name
+    index_orig_name = f'{index_name}_orig'
 
     v_indices_orig = tri['vertices'].index.values
     t_vertices_orig = tri['triangles'].loc[:,[0,1,2]].values
@@ -108,9 +109,9 @@ def remove_unused_vertices(**tri):
     used_indices = set(v_indices_orig) &  (set(t_vertices_orig.flatten()) | segments_set)
 
     v_subset = tri['vertices'].loc[list(used_indices)]
-    v_subset = v_subset.reset_index().rename(columns={index_name: 'index_orig'})
+    v_subset = v_subset.reset_index().rename(columns={index_name: index_orig_name})
 
-    new_index_mapping =dict(zip(v_subset.index_orig.values,v_subset.index.values))
+    new_index_mapping =dict(zip(v_subset.loc[:,index_orig_name].values,v_subset.index.values))
 
     triangles_copy = tri['triangles'].loc[:,[0,1,2]].copy()
     for col in triangles_copy.columns:
@@ -126,3 +127,13 @@ def remove_unused_vertices(**tri):
     tri['triangles'].loc[:, [0, 1, 2]] = triangles_copy
 
     return tri
+
+def remove_invalid_triangles(points, faces):
+    """
+    removes traingles whose vertices are missing, and reindexes the vertices and triangles back to natural indexes
+    (that is, indices starting at 0 and increasing by 1 with each row)
+    """
+
+    valid_tri_mask = np.all(faces.loc[:,[0,1,2]].isin(points.index), axis=1)
+    faces = faces[valid_tri_mask]
+    return cleanup.reindex(points, faces)
