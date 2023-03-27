@@ -136,4 +136,4 @@ def remove_invalid_triangles(points, faces):
 
     valid_tri_mask = np.all(faces.loc[:,[0,1,2]].isin(points.index), axis=1)
     faces = faces[valid_tri_mask]
-    return cleanup.reindex(points, faces)
+    return reindex(points, faces)
