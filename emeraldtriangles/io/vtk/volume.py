@@ -136,10 +136,6 @@ def to_meshdata(tin, layer_depths, x_col="X", y_col="Y", z_col="Z"):
         "cell_arrays":df_cell
     }
 
-def to_pyvista_(tin, *arg, **kw):
-    meshdata = to_meshdata(tin, *arg, **kw)
-    m = pyvista.UnstructuredGrid(meshdata["cells"], meshdata["celltypes"], meshdata["points"])
-    return meshdata, m
 
 def to_pyvista(tin, *arg, **kw):
     meshdata = to_meshdata(tin, *arg, **kw)
