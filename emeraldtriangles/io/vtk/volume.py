@@ -136,15 +136,23 @@ def to_meshdata(tin, layer_depths, x_col="X", y_col="Y", z_col="Z"):
         "cell_arrays":df_cell
     }
 
+
 def to_pyvista(tin, *arg, **kw):
     meshdata = to_meshdata(tin, *arg, **kw)
     m = pyvista.UnstructuredGrid(meshdata["cells"], meshdata["celltypes"], meshdata["points"])
     for col in meshdata["point_arrays"].columns:
+        #if col == "label_layer":
+         #   print('Appending point arrays label layer')
+          #  m.point_arrays[col] = meshdata["point_arrays"][col]
         if meshdata["point_arrays"][col].dtype == object:
             continue
-        m.point_arrays[col] = meshdata["point_arrays"][col]
+        m.point_data[col] = meshdata["point_arrays"][col]
     for col in meshdata["cell_arrays"].columns:
+        #if col == "label_layer":
+         #   print('Appending cell arrays label layer')
+          #  m.cell_arrays[col] = meshdata["cell_arrays"][col]
         if meshdata["cell_arrays"][col].dtype != float:
+            #print('cell array dtype not float', col)
             continue
-        m.cell_arrays[col] = meshdata["cell_arrays"][col]
+        m.cell_data[col] = meshdata["cell_arrays"][col]
     return m
