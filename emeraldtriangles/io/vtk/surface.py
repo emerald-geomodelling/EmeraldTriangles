@@ -29,8 +29,8 @@ def to_pyvista(tri, **kw):
     m = pyvista.UnstructuredGrid(meshdata["cells"], meshdata["celltypes"], meshdata["points"])
     for col, dtype in meshdata["point_arrays"].dtypes.items():
         if dtype != float: continue
-        m.point_arrays[col] = meshdata["point_arrays"][col]
+        m.point_data[col] = meshdata["point_arrays"][col]
     for col, dtype in meshdata["cell_arrays"].dtypes.items():
         if dtype != float: continue
-        m.cell_arrays[col] = meshdata["cell_arrays"][col]
+        m.cell_data[col] = meshdata["cell_arrays"][col]
     return m
