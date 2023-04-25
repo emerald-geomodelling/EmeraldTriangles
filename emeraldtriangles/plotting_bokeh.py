@@ -76,7 +76,9 @@ def triangles(fig, color, tags=[], line_color=None, **tri):
 
 def plot(fig, color = None, tags=[], **tri):
     if "vertices" in tri:
-        tri["vertices"] = tri["vertices"].copy().fillna(-1)
+        for col in tri["vertices"].columns:
+            if col.startswith("res_"):
+                tri["vertices"][col] = tri["vertices"][col].fillna(-1)
     
     if "points" in tri and len(tri["points"]):
         points(fig, color, tags, **tri)
