@@ -36,7 +36,7 @@ setuptools.setup(
     url='https://github.com/EMeraldGeo/EmeraldTriangles',
     packages=setuptools.find_packages(),
     install_requires=[
-        "numpy",
+        "numpy==1.24.4",
         "pandas",
         "scipy",
         "triangle",
