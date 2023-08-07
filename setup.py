@@ -2,7 +2,7 @@
 
 import setuptools
 import subprocess
-from setuptools import setup, Extension
+from setuptools import setup
 
 include_dirs = [a for a in (a.strip() for a in subprocess.check_output(
     ["pkg-config", "libxml-2.0", "--cflags-only-I"]).decode("utf-8").split("-I")) if a]
@@ -11,20 +11,23 @@ library_dirs = [a for a in (a.strip() for a in subprocess.check_output(
 libraries = [a for a in (a.strip() for a in subprocess.check_output(
     ["pkg-config", "libxml-2.0", "--libs-only-l"]).decode("utf-8").split("-l")) if a]
 
-class get_numpy_include(object):
-    def __str__(self):
-        return self.__fspath__()
-    def __fspath__(self):
-        import numpy
-        return numpy.get_include()
-    def __getattr__(self, item):
-        return getattr(str(self),item)
-    def __add__(self, other):
-        return str(self)+other
+class Extension(setuptools.Extension):
+    def __init__(self, *args, **kwargs):
+        self.__include_dirs = []
+        super().__init__(*args, **kwargs)
 
+    @property
+    def include_dirs(self):
+        import numpy
+        return self.__include_dirs + [numpy.get_include()]
+
+    @include_dirs.setter
+    def include_dirs(self, dirs):
+        self.__include_dirs = dirs
+    
 setuptools.setup(
     name='emeraldtriangles',
-    version='0.0.28',
+    version='0.1.0',
     description='Triangle mesh transforms',
     long_description='Iteratively add points to an existing mesh, calculate mesh bounding polygons etc.',
     long_description_content_type="text/markdown",
@@ -60,7 +63,7 @@ setuptools.setup(
         Extension(
             'emeraldtriangles.io._landxml',
             sources=['emeraldtriangles/io/_landxml.pyx'],
-            include_dirs = include_dirs + [get_numpy_include()],
+            include_dirs = include_dirs,
             library_dirs = library_dirs,
             libraries = libraries,
         ),

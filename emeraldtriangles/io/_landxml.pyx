@@ -162,9 +162,9 @@ cdef void land_xml_characters(void *ctx, libxml.const_xmlChar *ch, int len):
     
 cdef libxml.xmlSAXHandler land_xml_handler
 
-land_xml_handler.startElement = land_xml_startElementSAX
-land_xml_handler.endElement = land_xml_endElementSAX
-land_xml_handler.characters = land_xml_characters
+land_xml_handler.startElement = <libxml.startElementSAXFunc>land_xml_startElementSAX
+land_xml_handler.endElement = <libxml.endElementSAXFunc>land_xml_endElementSAX
+land_xml_handler.characters = <libxml.charactersSAXFunc>land_xml_characters
 
 def parse(filename):
     cdef State state = State()
