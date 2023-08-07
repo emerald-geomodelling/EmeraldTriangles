@@ -1,7 +1,7 @@
-import scipy.spatial.distance
-from scipy.sparse import csr_array
+#import scipy.spatial.distance
+# from scipy.sparse import csr_array
 from scipy.spatial import cKDTree
-import numpy as np
+#import numpy as np
 
 def distance_to_data(col, x_col="X", y_col="Y", **tri):
     """Calculate spatial distance (cartesian distance in the current
