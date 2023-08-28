@@ -11,10 +11,10 @@ def to_meshdata(tri, x_col="X", y_col="Y", z_col="Z"):
     point_coordinates = vertices.loc[:,[x_col,y_col,z_col]].to_numpy()
     cell_indices_np = triangles[[0,1,2]].to_numpy()
     
-    num_nodes = np.ones((cell_indices_np.shape[0],1), dtype=np.int)*3
+    num_nodes = np.ones((cell_indices_np.shape[0],1), dtype=np.int64)*3
 
     cells_out_vtk = np.concatenate((num_nodes,cell_indices_np),axis=1)
-    cell_types_out_vtk = np.full((cell_indices_np.shape[0],1), vtk.VTK_TRIANGLE, dtype=np.int)
+    cell_types_out_vtk = np.full((cell_indices_np.shape[0],1), vtk.VTK_TRIANGLE, dtype=np.int64)
 
     return {
         "cells": cells_out_vtk,

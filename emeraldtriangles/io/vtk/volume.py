@@ -123,10 +123,10 @@ def to_meshdata(tin, layer_depths, x_col="X", y_col="Y", z_col="Z"):
     
     point_coordinates = df[[x_col, y_col, 'point_z']].to_numpy()
     cell_indices_np = df_cell[['0_3d', '1_3d', '2_3d', '3_3d', '4_3d', '5_3d']].to_numpy()
-    num_nodes = np.full((cell_indices_np.shape[0], 1), 6, dtype=np.int)
+    num_nodes = np.full((cell_indices_np.shape[0], 1), 6, dtype=np.int64)
 
     cells_out_vtk = np.concatenate( (num_nodes,cell_indices_np), axis=1)
-    cell_types_out_vtk = np.full((cell_indices_np.shape[0], 1), vtk.VTK_WEDGE, dtype=np.int)
+    cell_types_out_vtk = np.full((cell_indices_np.shape[0], 1), vtk.VTK_WEDGE, dtype=np.int64)
 
     return {
         "cells": cells_out_vtk,
