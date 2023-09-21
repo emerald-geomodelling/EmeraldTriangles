@@ -49,6 +49,6 @@ def points_in_triangles(points, vertices, triangles, **kw):
 
     points_and_triangles = pd.DataFrame([
         (idx, matches[0] if len(matches) > 0 else -1)
-        for idx, matches in enumerate(points_in_triangle(P, A, B, C))], columns = ["point", "triangle"], dtype = np.int)
+        for idx, matches in enumerate(points_in_triangle(P, A, B, C))], columns = ["point", "triangle"], dtype = int)
     logger.info(f"points_in_triangles: completed")
     return points_and_triangles
