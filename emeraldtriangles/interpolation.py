@@ -3,6 +3,7 @@ import skgstat
 import logging
 from .points_in_mesh import points_in_triangles
 import scipy.interpolate
+from copy import deepcopy
 
 logger = logging.getLogger(__name__)
 
@@ -34,8 +35,8 @@ def interpolate_arrays(param_name, variograms, positions, values, new_positions,
     kriging_args : dict
       Extra arguments to skgstat.OrdinaryKriging
     """
-
-    method = kriging_args.get("method", "kriging")
+    kriging_args_copy = deepcopy(kriging_args)
+    method = kriging_args_copy.pop("method", "kriging")
     logger.debug("Interpolating %s using %s..." % (param_name, method))
 
     if np.isnan(values).min():
@@ -44,7 +45,7 @@ def interpolate_arrays(param_name, variograms, positions, values, new_positions,
         return np.full(len(new_positions), np.nanmax(values)), np.full(len(new_positions), 0)
 
     if method == "kriging":
-        return interpolate_arrays_kriging(param_name, variograms, positions, values, new_positions, variogram_args, kriging_args)
+        return interpolate_arrays_kriging(param_name, variograms, positions, values, new_positions, variogram_args, kriging_args_copy)
     elif method == "linear":
         res = scipy.interpolate.griddata(positions, values, new_positions)
         # Placeholder variance of np.nan everywhere
