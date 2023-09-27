@@ -88,6 +88,7 @@ def remove_overlapping_points_vertices(points, vertices, keep='points'):
 
     return points, vertices
 
+
 def remove_unused_vertices(**tri):
     """
     After triangulation, if there are vertices that are unsused in the triangulation, this function will remove them and
@@ -97,26 +98,33 @@ def remove_unused_vertices(**tri):
     index_name = 'index'
     if tri['vertices'].index.name is not None:
         index_name = tri['vertices'].index.name
+    else:
+        tri["vertices"].index.name = "vertex_id"
+        index_name = tri['vertices'].index.name
+
     index_orig_name = f'{index_name}_orig'
 
     v_indices_orig = tri['vertices'].index.values
-    t_vertices_orig = tri['triangles'].loc[:,[0,1,2]].values
+    t_vertices_orig = tri['triangles'].loc[:, [0, 1, 2]].values
+
     if 'segments' in tri.keys():
-        segments_set = set(tri['segments'].loc[:,[0,1,]].values.flatten())
+        segments_set = set(tri['segments'].loc[:, [0, 1, ]].values.flatten())
     else:
         segments_set = set()
 
-    used_indices = set(v_indices_orig) &  (set(t_vertices_orig.flatten()) | segments_set)
-
+    used_indices = set(v_indices_orig) & (set(t_vertices_orig.flatten()) | segments_set)
     v_subset = tri['vertices'].loc[list(used_indices)]
     v_subset = v_subset.reset_index().rename(columns={index_name: index_orig_name})
 
-    new_index_mapping =dict(zip(v_subset.loc[:,index_orig_name].values,v_subset.index.values))
+    if not len(v_subset.columns) == len(set(v_subset.columns)):
+        v_subset = v_subset.T.drop_duplicates().T
 
-    triangles_copy = tri['triangles'].loc[:,[0,1,2]].copy()
+    new_index_mapping = dict(zip(v_subset.loc[:, index_orig_name].values, v_subset.index.values))
+
+    triangles_copy = tri['triangles'].loc[:, [0, 1, 2]].copy()
     for col in triangles_copy.columns:
         triangles_copy[col] = triangles_copy[col].map(new_index_mapping)
-        
+
     if 'segments' in tri.keys():
         segments_copy = tri['segments'].loc[:, [0, 1]].copy()
         for col in segments_copy.columns:
