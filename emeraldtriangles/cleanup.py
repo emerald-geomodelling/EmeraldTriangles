@@ -98,9 +98,6 @@ def remove_unused_vertices(**tri):
     index_name = 'index'
     if tri['vertices'].index.name is not None:
         index_name = tri['vertices'].index.name
-    else:
-        tri["vertices"].index.name = "vertex_id"
-        index_name = tri['vertices'].index.name
 
     index_orig_name = f'{index_name}_orig'
 
@@ -114,11 +111,10 @@ def remove_unused_vertices(**tri):
 
     used_indices = set(v_indices_orig) & (set(t_vertices_orig.flatten()) | segments_set)
     v_subset = tri['vertices'].loc[list(used_indices)]
-    v_subset = v_subset.reset_index().rename(columns={index_name: index_orig_name})
 
     if not len(v_subset.columns) == len(set(v_subset.columns)):
         v_subset = v_subset.T.drop_duplicates().T
-
+    v_subset = v_subset.reset_index().rename(columns={index_name: index_orig_name})
     new_index_mapping = dict(zip(v_subset.loc[:, index_orig_name].values, v_subset.index.values))
 
     triangles_copy = tri['triangles'].loc[:, [0, 1, 2]].copy()
