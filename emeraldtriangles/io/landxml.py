@@ -60,7 +60,6 @@ except:
                 self.append_triangle([int(val) for val in self.content.strip().split(" ")])
                 self.content = ""
             elif tag == "Surface":
-                print('Surface, farsooth!')
                 self.surface["vertices"] = pd.concat(self.surface["vertices"]).loc[:self.vertex_row_idx - 1]
                 self.surface["triangles"] = pd.concat(self.surface["triangles"]).loc[:self.triangle_row_idx - 1]
                 self.surface['vertices'].set_index('id', drop=False,verify_integrity=True, inplace=True)
