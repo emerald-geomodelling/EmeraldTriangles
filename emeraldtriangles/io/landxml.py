@@ -2,17 +2,25 @@ import lxml.etree as ET
 import pandas as pd
 import numpy as np
 import xml.sax
+import warnings
+from ..cleanup import reindex
+
 try:
+    raise ValueError()
     from emeraldtriangles.io._landxml import parse
 except:
+    warnings.warn('The Cython version of the LandXML parser (_landxml.pyx) has been deactivated because updates to the Pythonic '
+                  'version (landxml.py) made on 2023-11-02 have not been ported. See details in the ticket '
+                  'https://github.com/emerald-geomodelling/EmeraldTriangles/issues/18')
     class LandXMLHandler(xml.sax.ContentHandler):
         chunk_size = 1024
 
-        def __init__(self):
+        def __init__(self, reindex_points=True):
             self.path = []
             self.meta = {}
             self.surfaces = {}
             self.content = ""
+            self.reindex_points = reindex_points
 
         def add_meta(self, path, meta, attributes):
             if len(path) == 0:
@@ -57,6 +65,9 @@ except:
                 self.surface["triangles"] = pd.concat(self.surface["triangles"]).loc[:self.triangle_row_idx - 1]
                 self.surface['vertices'].set_index('id', drop=False,verify_integrity=True, inplace=True)
                 self.surface['vertices'].index.rename(None, inplace=True)
+                if self.reindex_points:
+                    self.surface['vertices'], self.surface['triangles'] = reindex(self.surface['vertices'],
+                                                                                          self.surface['triangles'])
             self.path.pop()
 
         def characters(self, content):
@@ -97,10 +108,10 @@ except:
             self.triangles_2[self.triangle_row_idx - self.triangles_start] = triangle[2]
             self.triangle_row_idx += 1
 
-    def parse(xmlfile):
+    def parse(xmlfile, reindex_points = True):
         parser = xml.sax.make_parser()
         parser.setFeature(xml.sax.handler.feature_namespaces, 0)
-        handler = LandXMLHandler()
+        handler = LandXMLHandler(reindex_points=reindex_points)
         parser.setContentHandler(handler)
         parser.parse(xmlfile)
         return {"meta": handler.meta, "surfaces": handler.surfaces}
