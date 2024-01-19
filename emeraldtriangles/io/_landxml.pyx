@@ -1,8 +1,11 @@
 import pandas as pd
 import numpy as np
+from ..cleanup import reindex
 
 cimport numpy as np
 cimport cpython.bytes
+from libc.math cimport isnan
+from libc.stdlib cimport atoi
 from . cimport libxml
 
 cdef extern from "string.h":
@@ -29,6 +32,7 @@ cdef class State(object):
     cdef np.ndarray vertices_y
     cdef np.ndarray vertices_z
     cdef np.ndarray vertices_m
+    cdef np.ndarray vertices_id
     cdef int vertices_start
 
     cdef object triangles
@@ -39,16 +43,20 @@ cdef class State(object):
     
     cdef char content[CONTENT_BUFFER_SIZE]
     cdef size_t content_pos
-    cdef int vertice_idx
-    cdef int triangle_idx
+    cdef int vertex_row_idx    
+    cdef int triangle_row_idx
+    cdef int vertex_id_no
+
+    cdef char reindex_points
     
-    def __init__(self, chunk_size = 10240):
+    def __init__(self, chunk_size = 10240, reindex_points=False):
         self.chunk_size = chunk_size
         self.path = []
         self.meta = {}
         self.surfaces = {}
         self.content[0] = 0
         self.content_pos = 0
+        self.reindex_points = reindex_points
         
     def add_meta(self, path, meta, attributes):
         if len(path) == 0:
@@ -60,40 +68,51 @@ cdef class State(object):
         
     cdef append_point(State self, double point[4]):
         end = self.vertices.index.max() if self.vertices is not None else -1
-        if self.vertice_idx > end:
-            self.vertices = pd.DataFrame(index=pd.RangeIndex(end + 1, end + 1 + self.chunk_size), columns=("Y", "X", "Z", "M"), dtype=float)
+        if self.vertex_row_idx > end:
+            self.vertices = pd.DataFrame(index=pd.RangeIndex(end + 1, end + 1 + self.chunk_size), columns=("Y", "X", "Z", "M", "id"), dtype=float)
+            self.vertices.id = self.vertices.id.fillna(-1).astype(int)
             self.vertices_x = self.vertices["X"].values
             self.vertices_y = self.vertices["Y"].values
             self.vertices_z = self.vertices["Z"].values
             self.vertices_m = self.vertices["M"].values
+            self.vertices_id= self.vertices["id"].values
             self.vertices_start = end + 1
             self.surface["vertices"].append(self.vertices)
-        self.vertices_y[self.vertice_idx - self.vertices_start] = point[0]
-        self.vertices_x[self.vertice_idx - self.vertices_start] = point[1]
-        self.vertices_z[self.vertice_idx - self.vertices_start] = point[2]
-        self.vertices_m[self.vertice_idx - self.vertices_start] = point[3]
-        self.vertice_idx += 1
-
+        self.vertices_y[self.vertex_row_idx - self.vertices_start] = point[0]
+        self.vertices_x[self.vertex_row_idx - self.vertices_start] = point[1]
+        if not isnan(point[2]):
+            self.vertices_z[self.vertex_row_idx - self.vertices_start] = point[2]
+            if not isnan(point[3]):
+                self.vertices_m[self.vertex_row_idx - self.vertices_start] = point[3]
+        self.vertices_id[self.vertex_row_idx - self.vertices_start] = self.vertex_id_no
+        self.vertex_row_idx += 1
+        
     cdef append_triangle(State self, long long triangle[3]):
         end = self.triangles.index.max() if self.triangles is not None else -1
-        if self.triangle_idx > end:
-            self.triangles = pd.DataFrame(index=pd.RangeIndex(end + 1, end + 1 + self.chunk_size), columns=(0, 1, 2), dtype=int, data=-1)
+        if self.triangle_row_idx > end:
+            self.triangles = pd.DataFrame(index=pd.RangeIndex(end + 1, end + 1 + self.chunk_size), columns=(0, 1, 2,), dtype=int, data=-1)
             self.triangles_0 = self.triangles[0].values
             self.triangles_1 = self.triangles[1].values
             self.triangles_2 = self.triangles[2].values
             self.triangles_start = end + 1
             self.surface["triangles"].append(self.triangles)
-        self.triangles_0[self.triangle_idx - self.triangles_start] = triangle[0]-1 # LandXML points are numbered from 1, not 0
-        self.triangles_1[self.triangle_idx - self.triangles_start] = triangle[1]-1
-        self.triangles_2[self.triangle_idx - self.triangles_start] = triangle[2]-1
-        self.triangle_idx += 1
+        self.triangles_0[self.triangle_row_idx - self.triangles_start] = triangle[0]
+        self.triangles_1[self.triangle_row_idx - self.triangles_start] = triangle[1]
+        self.triangles_2[self.triangle_row_idx - self.triangles_start] = triangle[2]
+        self.triangle_row_idx += 1
 
-cdef str getAttrValue(libxml.const_xmlChar **atts, libxml.const_xmlChar *name):
+cdef char *getAttrValueC(libxml.const_xmlChar **atts, libxml.const_xmlChar *name):
     while atts[0]:
         if strcmp(<char *>atts[0], <char *>name) == 0:
-            return (<bytes>atts[1]).decode("utf-8")
+            return <char *>atts[1]
         atts += 2
-    return None
+    return NULL
+
+cdef str getAttrValue(libxml.const_xmlChar **atts, libxml.const_xmlChar *name):
+    cdef char *res = getAttrValueC(atts, name)
+    if not res:
+        return None
+    return (<bytes>res).decode("utf-8")
 
 cdef dict getAttrValues(libxml.const_xmlChar **atts):
     cdef dict res = {} 
@@ -104,6 +123,8 @@ cdef dict getAttrValues(libxml.const_xmlChar **atts):
 
 cdef void land_xml_startElementSAX(void* ctx, libxml.const_xmlChar* name, libxml.const_xmlChar** atts):
     cdef State state = <State>ctx
+    cdef char is_p
+    cdef char *idstr
     
     state.path.append((<bytes>name).decode("utf-8"))
     if state.path[:2] == ["LandXML", "Surfaces"]:
@@ -114,11 +135,19 @@ cdef void land_xml_startElementSAX(void* ctx, libxml.const_xmlChar* name, libxml
             }
             state.vertices = None
             state.triangles = None
-            state.vertice_idx = 0
-            state.triangle_idx = 0
-        if (strcmp(<char *>name, b"P") == 0) or (strcmp(<char *>name, b"F") == 0):
+            state.vertex_row_idx = 0
+            state.triangle_row_idx = 0
+        is_p = strcmp(<char *>name, b"P") == 0
+        if is_p or (strcmp(<char *>name, b"F") == 0):
             state.content[0] = 0
             state.content_pos = 0
+            if is_p:
+                idstr = getAttrValueC(atts, b"id")
+                if idstr:
+                    state.vertex_id_no = atoi(idstr)
+                else:
+                    state.vertex_id_no = -1
+
         pass
     else:
         state.add_meta(state.path[1:], state.meta, getAttrValues(atts))
@@ -144,8 +173,15 @@ cdef void land_xml_endElementSAX(void* ctx, libxml.const_xmlChar* name):
         state.content[0] = 0
         state.content_pos = 0
     elif strcmp(<char *>name, b"Surface") == 0:
-        state.surface["vertices"] = pd.concat(state.surface["vertices"]).loc[:state.vertice_idx - 1]
-        state.surface["triangles"] = pd.concat(state.surface["triangles"]).loc[:state.triangle_idx - 1]
+        state.surface["vertices"] = pd.concat(state.surface["vertices"]).loc[:state.vertex_row_idx - 1]
+        state.surface["triangles"] = pd.concat(state.surface["triangles"]).loc[:state.triangle_row_idx - 1]
+
+        state.surface['vertices'].set_index('id', drop=False,verify_integrity=True, inplace=True)
+        state.surface['vertices'].index.rename(None, inplace=True)
+        if state.reindex_points:
+            state.surface['vertices'], state.surface['triangles'] = reindex(state.surface['vertices'],
+                                                                            state.surface['triangles'])
+
     state.path.pop()
 
     #print("/" + (<bytes>name).decode("utf-8"))
@@ -166,8 +202,8 @@ land_xml_handler.startElement = <libxml.startElementSAXFunc>land_xml_startElemen
 land_xml_handler.endElement = <libxml.endElementSAXFunc>land_xml_endElementSAX
 land_xml_handler.characters = <libxml.charactersSAXFunc>land_xml_characters
 
-def parse(filename):
-    cdef State state = State()
+def parse(filename, chunk_size = 10240, reindex_points=False):
+    cdef State state = State(chunk_size=chunk_size, reindex_points=reindex_points)
 
     # Levanger_terrain_tri_high_res_2020juni_rev02_Surface.xml
     filename = filename.encode("utf-8")
