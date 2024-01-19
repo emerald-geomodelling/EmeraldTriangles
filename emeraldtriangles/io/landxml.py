@@ -6,12 +6,8 @@ import warnings
 from ..cleanup import reindex
 
 try:
-    raise ValueError()
     from emeraldtriangles.io._landxml import parse
 except:
-    warnings.warn('The Cython version of the LandXML parser (_landxml.pyx) has been deactivated because updates to the Pythonic '
-                  'version (landxml.py) made on 2023-11-02 have not been ported. See details in the ticket '
-                  'https://github.com/emerald-geomodelling/EmeraldTriangles/issues/18')
     class LandXMLHandler(xml.sax.ContentHandler):
         chunk_size = 1024
 
