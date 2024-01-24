@@ -202,7 +202,7 @@ land_xml_handler.startElement = <libxml.startElementSAXFunc>land_xml_startElemen
 land_xml_handler.endElement = <libxml.endElementSAXFunc>land_xml_endElementSAX
 land_xml_handler.characters = <libxml.charactersSAXFunc>land_xml_characters
 
-def parse(filename, chunk_size = 10240, reindex_points=False):
+def parse(filename, chunk_size = 10240, reindex_points=True):
     cdef State state = State(chunk_size=chunk_size, reindex_points=reindex_points)
 
     # Levanger_terrain_tri_high_res_2020juni_rev02_Surface.xml
