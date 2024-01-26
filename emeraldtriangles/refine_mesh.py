@@ -124,7 +124,8 @@ def supplant_triangles(existing_boundary=False, **tri):
             holes = np.append(process_tri["holes"], holes, axis=0)
         process_tri["holes"] = holes
 
-    res.update(triangle.triangulate(process_tri, 'p'))
+    triangle_triangulate_result = triangle.triangulate(process_tri, 'p')
+    res.update(triangle_triangulate_result)
     
     if "triangles" in tri:
         triangles = tri["triangles"]
