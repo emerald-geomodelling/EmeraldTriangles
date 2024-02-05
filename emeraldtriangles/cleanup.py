@@ -66,7 +66,7 @@ def merge_tins(a, b):
     b_triangles[0] += points_start
     b_triangles[1] += points_start
     b_triangles[2] += points_start
-    res["triangles"] = triangles.append(b_triangles).reset_index()
+    res["triangles"] = pd.concat([triangles,b_triangles], axis=0, ignore_index=True)
     return res
 
 def remove_overlapping_points_vertices(points, vertices, keep='points'):
