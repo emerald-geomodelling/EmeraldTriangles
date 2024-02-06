@@ -141,3 +141,35 @@ def remove_invalid_triangles(points, faces):
     valid_tri_mask = np.all(faces.loc[:,[0,1,2]].isin(points.index), axis=1)
     faces = faces[valid_tri_mask]
     return reindex(points, faces)
+
+
+def set_case_column_names(df, columns, uppercase=True, ):
+    """
+    Take a pandas.DataFrame, and convert the columns specified to either uppercase (default) or to lowercase. Can
+    be used to convert coordinate column names to the uppercase "X", "Y" and optional "Z" to the uppercase forms
+    that most code in EMeraldTriangles expects. The DataFrame is modified in place (columns are renamed)
+
+    @param df: input pandas.DataFrame
+    @param columns: list of column names to operate on
+    @param uppercase: boolean that controls whether columns will be converted to upperase (default) or lowercase
+
+    """
+    upper = lambda s: s.upper()
+    lower = lambda s: s.lower()
+
+    if uppercase:
+        function_target = upper
+        function_source = lower
+        case_target = 'upper'
+        case_source = 'lower'
+    else:
+        function_target = lower
+        function_source = upper
+        case_target = 'lower'
+        case_source = 'upper'
+
+    for col in columns:
+        if function_source(col) in df.columns and function_target(col) in df.columns:
+            raise ValueError(f"both uppercase and lower versions of the column {col} found in this DataFrame!")
+        if function_target(col) not in df.columns:
+            df.rename(columns={function_source(col): function_target(col)}, inplace=True)
