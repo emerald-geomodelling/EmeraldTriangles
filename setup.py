@@ -45,8 +45,6 @@ install_requires = [
             ]
 
 if platform.system() == 'Darwin' or platform.machine() == 'arm64' or sys.version_info < (3, 10):
-  # Conditions under which it's safe to install `triangle` from PyPI
-      #print(f"System = {platform.system()}, Version Info = {sys.version_info}")
       result = subprocess.run(["pip", "install", "git+https://github.com/drufat/triangle.git"], capture_output=True, text=True)
       if result.returncode == 0:
           print("Package <Triangle> installed successfully!")
