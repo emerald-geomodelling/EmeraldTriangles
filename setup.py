@@ -3,6 +3,8 @@
 import setuptools
 import subprocess
 from setuptools import setup
+import platform
+import sys
 
 include_dirs = [a for a in (a.strip() for a in subprocess.check_output(
     ["pkg-config", "libxml-2.0", "--cflags-only-I"]).decode("utf-8").split("-I")) if a]
@@ -24,23 +26,11 @@ class Extension(setuptools.Extension):
     @include_dirs.setter
     def include_dirs(self, dirs):
         self.__include_dirs = dirs
-    
-setuptools.setup(
-    name='emeraldtriangles',
-    version='0.1.2',
-    description='Triangle mesh transforms',
-    long_description='Iteratively add points to an existing mesh, calculate mesh bounding polygons etc.',
-    long_description_content_type="text/markdown",
-    author='Egil Moeller, Craig W. Christensen, et al.',
-    author_email='em@emrld.no',
-    url='https://github.com/EMeraldGeo/EmeraldTriangles',
-    packages=setuptools.find_packages(),
-    install_requires=[
+
+install_requires = [
         "numpy==1.24.4",
         "pandas",
         "scipy",
-        "triangle",
-
         # Maybe make these optional?
         "pandasio",
         "lxml",
@@ -52,7 +42,35 @@ setuptools.setup(
         "scikit-gstat",
         "bokeh",
         'rasterio',
-    ],
+            ]
+
+if platform.system() == 'Darwin' or platform.machine() == 'arm64' or sys.version_info < (3, 10):
+  # Conditions under which it's safe to install `triangle` from PyPI
+      #print(f"System = {platform.system()}, Version Info = {sys.version_info}")
+      result = subprocess.run(["pip", "install", "git+https://github.com/drufat/triangle.git"], capture_output=True, text=True)
+      if result.returncode == 0:
+          print("Package <Triangle> installed successfully!")
+          print(result.stdout)
+      else:
+          print("Package <Triangle> failed to install :(")
+          print(result.stderr)
+else:
+    install_requires.append("triangle")
+
+setuptools.setup(
+    name='emeraldtriangles',
+    version='0.1.2',
+    description='Triangle mesh transforms',
+    long_description='Iteratively add points to an existing mesh, calculate mesh bounding polygons etc.',
+    long_description_content_type="text/markdown",
+    author='Egil Moeller, Craig W. Christensen, et al.',
+    author_email='em@emrld.no',
+    url='https://github.com/EMeraldGeo/EmeraldTriangles',
+    packages=setuptools.find_packages(),
+
+    install_requires=install_requires
+
+    ,
     setup_requires=[
         'setuptools>=18.0',
         'numpy',
