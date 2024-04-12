@@ -45,7 +45,7 @@ install_requires = [
             ]
 
 if platform.system() == 'Darwin' or platform.machine() == 'arm64' or sys.version_info < (3, 10):
-      result = subprocess.run(["pip", "install", "triangle @ git+https://github.com/drufat/triangle.git"], capture_output=True, text=True)
+      result = subprocess.run(["pip", "install", "triangle @ git+https://github.com/drufat/triangle.git@2024-04-12-v.0.15.3"], capture_output=True, text=True)
       if result.returncode == 0:
           print("Package <Triangle> installed successfully!")
           print(result.stdout)
@@ -57,7 +57,7 @@ else:
 
 setuptools.setup(
     name='emeraldtriangles',
-    version='0.1.2',
+    version="0.15.3",
     description='Triangle mesh transforms',
     long_description='Iteratively add points to an existing mesh, calculate mesh bounding polygons etc.',
     long_description_content_type="text/markdown",
