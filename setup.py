@@ -59,7 +59,7 @@ install_requires = [
 
 setuptools.setup(
     name='emeraldtriangles',
-    version='0.1.2',
+    version='0.1.3',
     description='Triangle mesh transforms',
     long_description='Iteratively add points to an existing mesh, calculate mesh bounding polygons etc.',
     long_description_content_type="text/markdown",
