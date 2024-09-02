@@ -68,7 +68,9 @@ def to_meshdata(tin, layer_depths, x_col="X", y_col="Y", z_col="Z"):
             value_name="%s_layer" % name,
             var_name="layer_id"
         ).drop(columns=[] if idx is 0 else ["vertex_id", "layer_id"]))
-    df = pd.concat(dfs, axis=1).astype({"layer_id": int})
+
+    df = pd.concat(dfs, axis=1)
+    df = df.dropna(subset=["vertex_id", "layer_id"]).astype({"layer_id": int})
     
     df['layer_thickness'] = layer_thicknesses[df.layer_id.values]
     df['layer_bottom_depth'] = np.abs(layer_depths[df.layer_id.values])
