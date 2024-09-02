@@ -42,24 +42,13 @@ install_requires = [
         "scikit-gstat",
         "bokeh",
         'rasterio',
-    	'triangle@git+https://github.com/drufat/triangle.git'
+    	'triangle'
             ]
 
-# if platform.system() == 'Darwin' or platform.machine() == 'arm64' or sys.version_info < (3, 10):
-#       print("HELLLOOOO ALI")
-#       result = subprocess.run(["pip", "install", "triangle @ git+https://github.com/drufat/triangle.git"], capture_output=True, text=True)
-#       if result.returncode == 0:
-#           print("Package <Triangle> installed successfully!")
-#           print(result.stdout)
-#       else:
-#           print("Package <Triangle> failed to install :(")
-#           print(result.stderr)
-# else:
-#     install_requires.append("triangle")
 
 setuptools.setup(
     name='emeraldtriangles',
-    version='0.1.3',
+    version='0.1.4',
     description='Triangle mesh transforms',
     long_description='Iteratively add points to an existing mesh, calculate mesh bounding polygons etc.',
     long_description_content_type="text/markdown",
