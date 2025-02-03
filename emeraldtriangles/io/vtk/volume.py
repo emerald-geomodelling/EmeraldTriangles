@@ -19,6 +19,35 @@ def split_layer_columns(df):
         if group not in colgroups: colgroups[group] = []
         colgroups[group].append(col)
 
+    def move_single_member_groups(colgroups,per_position_cols):
+        """
+        Catches cases where there may be a lone group with a numerical suffix that gets mistaken as a sequence of layers
+        representing values varying in depth.
+        :param colgroups:
+        :param per_position_cols:
+        :return:
+        """
+        groups_to_move = []
+        for group_name, group_list in colgroups.items():
+            if len(group_list)<2:
+                groups_to_move.append(group_name)
+        for group_name in groups_to_move:
+            per_position_cols += colgroups[group_name]
+            del colgroups[group_name]
+
+    move_single_member_groups( colgroups,per_position_cols)
+
+    def sort_by_dict_values_length(my_dict):
+        # Sorting the keys by the length of their corresponding lists in descending order
+        sorted_keys = sorted(my_dict.keys(), key=lambda k: len(my_dict[k]), reverse=True)
+
+        # Creating a new dictionary with sorted keys
+        sorted_dict = {k: my_dict[k] for k in sorted_keys}
+        return sorted_dict
+
+    colgroups = sort_by_dict_values_length(colgroups)
+
+
     def columns_to_layers(columns):
         layers = np.array([int(re.match("^.*?[(\[]?([0-9]+)[)\]]?$", col).groups()[0]) for col in columns])
         layers -= np.min(layers)
