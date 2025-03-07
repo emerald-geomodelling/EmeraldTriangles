@@ -1,3 +1,5 @@
+import warnings
+
 import pandas as pd
 import numpy as np
 import itertools
@@ -175,15 +177,21 @@ def to_pyvista(tin, *arg, **kw):
         #if col == "label_layer":
          #   print('Appending point arrays label layer')
           #  m.point_arrays[col] = meshdata["point_arrays"][col]
-        if meshdata["point_arrays"][col].dtype == object:
-            continue
-        m.point_data[col] = meshdata["point_arrays"][col]
+        # if meshdata["point_arrays"][col].dtype == object:
+        #     continue
+        try:
+            m.point_data[str(col)] = meshdata["point_arrays"][col]
+        except UnicodeEncodeError:
+            warnings.warn(f'Encountered UnicodeEncodeError with {col}.Skipping...')
     for col in meshdata["cell_arrays"].columns:
         #if col == "label_layer":
          #   print('Appending cell arrays label layer')
           #  m.cell_arrays[col] = meshdata["cell_arrays"][col]
-        if meshdata["cell_arrays"][col].dtype != float:
-            #print('cell array dtype not float', col)
-            continue
-        m.cell_data[col] = meshdata["cell_arrays"][col]
+        # if meshdata["cell_arrays"][col].dtype != float:
+        #     #print('cell array dtype not float', col)
+        #     continue
+        try:
+            m.cell_data[str(col)] = meshdata["cell_arrays"][col]
+        except UnicodeEncodeError:
+            warnings.warn(f'Encountered UnicodeEncodeError with {col}.Skipping...')
     return m
