@@ -86,7 +86,7 @@ def interpolate_arrays_kriging(param_name, variograms, positions, values, new_po
     variance = kriging.sigma
     return values, variance
 
-def interpolate(col, variograms, variogram_args={}, kriging_args={}, **tri):
+def interpolate(col, variograms, variogram_args={}, kriging_args={},batch_size=5000, **tri):
     """Interpolate vertice column data using scikit-gstat. Data is
     interpolated from rows with non-NaN values to rows with NaN
     values.
@@ -105,28 +105,36 @@ def interpolate(col, variograms, variogram_args={}, kriging_args={}, **tri):
       Extra arguments to skgstat.Variogram
     kriging_args : dict
       Extra arguments to skgstat.OrdinaryKriging
+    batch_size : int
+      Number of target locations to interpolate in each batch
     **tri
       Triangulation to interpolate data over
     """
     vertices = tri["vertices"]
 
     existing = ~np.isnan(vertices[col])
+    target_indices = np.where(~existing)[0]
+    logger.debug(f"Interpolating {col}. {np.sum(existing)} input values, {len(target_indices)} target locations to interpolate ...")
 
     if existing.sum() > 0 and (~existing).sum() > 0:
         if "variogram" not in variograms.columns:
             variograms["variogram"] = None
 
-        values, variance = interpolate_arrays(
-            col,
-            variograms,
-            vertices.loc[existing, ["X", "Y"]].values,
-            vertices.loc[existing, col].values,
-            vertices.loc[~existing, ["X", "Y"]].values,
-            variogram_args,
-            kriging_args)
+        for start in range(0, len(target_indices), batch_size):
+            end = min(start + batch_size, len(target_indices))
+            batch_indices = target_indices[start:end]
+            logger.debug(f"... working on batch {start} to {end}")
+            values, variance = interpolate_arrays(
+                col,
+                variograms,
+                vertices.loc[existing, ["X", "Y"]].values,
+                vertices.loc[existing, col].values,
+                vertices.iloc[batch_indices][["X", "Y"]].values,
+                variogram_args,
+                kriging_args)
 
-        vertices.loc[~existing, col] = values
-        vertices.loc[~existing, col + '_kriging_uncertainty'] = variance
+            vertices.loc[batch_indices].loc[:, col] = values
+            vertices.loc[batch_indices].loc[:,col + '_kriging_uncertainty'] = variance
 
         if "meta" not in tri: tri["meta"] = {}
         if "columns" not in tri["meta"]: tri["meta"]["columns"] = {}
