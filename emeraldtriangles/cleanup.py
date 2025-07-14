@@ -114,7 +114,12 @@ def remove_unused_vertices(**tri):
 
     if not len(v_subset.columns) == len(set(v_subset.columns)):
         v_subset = v_subset.T.drop_duplicates().T
-    v_subset = v_subset.reset_index().rename(columns={index_name: index_orig_name})
+    v_subset = v_subset.reset_index()
+    if index_orig_name not in v_subset.columns:
+        v_subset.rename(columns={index_name: index_orig_name}, inplace=True)
+    else:
+        del v_subset[index_name]
+
     new_index_mapping = dict(zip(v_subset.loc[:, index_orig_name].values, v_subset.index.values))
 
     triangles_copy = tri['triangles'].loc[:, [0, 1, 2]].copy()
