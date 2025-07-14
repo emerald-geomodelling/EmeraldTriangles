@@ -133,8 +133,8 @@ def interpolate(col, variograms, variogram_args={}, kriging_args={},batch_size=5
                 variogram_args,
                 kriging_args)
 
-            vertices.loc[batch_indices].loc[:, col] = values
-            vertices.loc[batch_indices].loc[:,col + '_kriging_uncertainty'] = variance
+            vertices.loc[vertices.index[batch_indices], col] = values
+            vertices.loc[vertices.index[batch_indices],col+ '_kriging_uncertainty'] = variance
 
         if "meta" not in tri: tri["meta"] = {}
         if "columns" not in tri["meta"]: tri["meta"]["columns"] = {}
