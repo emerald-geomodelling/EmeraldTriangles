@@ -67,7 +67,7 @@ def to_meshdata(tin, layer_depths, x_col="X", y_col="Y", z_col="Z"):
             id_vars=['vertex_id'],
             value_name="%s_layer" % name,
             var_name="layer_id"
-        ).drop(columns=[] if idx is 0 else ["vertex_id", "layer_id"]))
+        ).drop(columns=[] if idx == 0 else ["vertex_id", "layer_id"]))
     df = pd.concat(dfs, axis=1).astype({"layer_id": int})
     
     df['layer_thickness'] = layer_thicknesses[df.layer_id.values]
@@ -82,7 +82,7 @@ def to_meshdata(tin, layer_depths, x_col="X", y_col="Y", z_col="Z"):
     df_dummy['layer_id'] = -1
     df_dummy['layer_bottom_depth'] = 0
     df_dummy['point_z'] = df_dummy[z_col]
-    df = df.append(df_dummy, ignore_index=True)
+    df = pd.concat([df, df_dummy], ignore_index=True)
 
     df = df.reset_index()
     df['vertex_id_3d'] = df.index

@@ -48,7 +48,7 @@ def reproject(projection=None, projection_out=None, x_col="X", y_col="Y", x_col_
         
     vertices = tri["vertices"]
     if x_col_out not in vertices.columns:
-        vertices[x_col_out] = np.NaN
+        vertices[x_col_out] = np.nan
 
     if replace:
         filt = vertices.index
