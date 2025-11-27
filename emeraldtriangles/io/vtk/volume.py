@@ -115,7 +115,7 @@ def to_meshdata(tin, layer_depths, x_col="X", y_col="Y", z_col="Z"):
     df_dummy['layer_id'] = -1
     df_dummy['layer_bottom_depth'] = 0
     df_dummy['point_z'] = df_dummy[z_col]
-    df = df.append(df_dummy, ignore_index=True)
+    df = pd.concat([df, df_dummy], ignore_index=True)
 
     df = df.reset_index()
     df['vertex_id_3d'] = df.index

@@ -12,9 +12,11 @@ def mesh_boundary(**tri):
     if not len(triangles):
         return tri
     
-    sides = triangles[[0, 1]].assign(triangle=triangles.index).append(
-        triangles[[1, 2]].assign(triangle=triangles.index).rename(columns={1:0, 2:1})).append(
-        triangles[[0, 2]].assign(triangle=triangles.index).rename(columns={2:1})).reset_index(drop=True)
+    sides = pd.concat([
+        triangles[[0, 1]].assign(triangle=triangles.index),
+        triangles[[1, 2]].assign(triangle=triangles.index).rename(columns={1:0, 2:1}),
+        triangles[[0, 2]].assign(triangle=triangles.index).rename(columns={2:1}),
+    ], ignore_index=True)
 
     sides.loc[sides[0] > sides[1], [1, 0]] = sides.loc[sides[0] > sides[1], [0, 1]].rename(columns={0:1, 1:0})
 
@@ -23,7 +25,7 @@ def mesh_boundary(**tri):
     segments = sides.drop_duplicates([0, 1], keep=False, ignore_index=True)
 
     if "segments" in tri:
-        segments = tri["segments"].append(segments).reset_index().drop(columns=['index'])
+        segments = pd.concat([tri["segments"], segments], ignore_index=True)
         segments.loc[:, 'vertex_set'] = segments.apply(lambda x: set([x.loc[0], x.loc[1]]), axis=1)
         segments_unique = segments.vertex_set.astype('str').drop_duplicates(keep='last')
         segments = segments.loc[segments_unique.index,[0,1,'triangle']]
@@ -36,8 +38,8 @@ def mesh_boundary(**tri):
 def _mesh_boundary_mark_rings(segments):
     segments = segments.copy()
     
-    segments["ring"] = np.NaN
-    segments["pos"] = np.NaN
+    segments["ring"] = np.nan
+    segments["pos"] = np.nan
     ring = 0
 
     while True:
@@ -88,9 +90,10 @@ def _mesh_boundary_to_pointlists(segments, **tri):
     for ring in segments["ring"].unique():
         ringborders = segments[segments["ring"] == ring]
     
-        res[int(ring)] = ringborders[[0, "pos"]].rename(columns={0:"point"}).append(
+        res[int(ring)] = pd.concat([
+            ringborders[[0, "pos"]].rename(columns={0:"point"}),
             ringborders[[1, "pos"]].rename(columns={1:"point"})
-        ).sort_values("pos").drop_duplicates("pos")["point"].values
+        ]).sort_values("pos").drop_duplicates("pos")["point"].values
 
     return res
 
@@ -118,7 +121,7 @@ def vertices_boundary(**tri):
         scipy.spatial.ConvexHull(tri["vertices"][["X", "Y"]]).simplices,
         columns=[0,1])
     if "segments" in tri:
-        segments = tri["segments"].append(segments)
+        segments = pd.concat([tri["segments"], segments])
     tri["segments"] = segments
     return tri
 
@@ -140,7 +143,7 @@ def polygon_to_boundary(poly, **tri):
         segments = pd.DataFrame(np.column_stack((segments[:-1], segments[1:])))
 
         if "segments" in tri:
-            tri["segments"] = tri["segments"].append(segments)
+            tri["segments"] = pd.concat([tri["segments"], segments])
         else:
             tri["segments"] = segments
     return tri

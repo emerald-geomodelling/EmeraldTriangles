@@ -1,0 +1,69 @@
+[build-system]
+requires = [
+    "setuptools>=61.0",
+    "wheel",
+    "cython>=0.29",
+    "numpy>=1.20",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "emeraldtriangles"
+version = "0.1.7"
+description = "Triangle mesh transforms"
+readme = "README.md"
+license = "MIT"
+authors = [
+    { name = "Egil Moeller, Craig W. Christensen, et al.", email = "em@emrld.no" }
+]
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Cython",
+    "Topic :: Scientific/Engineering :: GIS",
+]
+keywords = ["triangles", "mesh", "geospatial", "landxml", "delaunay"]
+
+dependencies = [
+    "numpy",
+    "pandas",
+    "scipy",
+    "pandasio",
+    "lxml",
+    "matplotlib",
+    "shapely",
+    "geoalchemy2",
+    "pyproj",
+    "pyvista",
+    "scikit-gstat",
+    "bokeh",
+    "rasterio",
+    "triangle @ git+https://github.com/drufat/triangle.git",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "pytest-cov",
+]
+
+[project.urls]
+Homepage = "https://github.com/EMeraldGeo/EmeraldTriangles"
+Repository = "https://github.com/EMeraldGeo/EmeraldTriangles"
+
+[tool.setuptools]
+packages = ["emeraldtriangles", "emeraldtriangles.io", "emeraldtriangles.io.vtk"]
+include-package-data = true
+
+[tool.setuptools.package-data]
+emeraldtriangles = ["**/*.pyx", "**/*.pxd"]
+
+[tool.cython]
+language_level = "3"
