@@ -1,3 +1,5 @@
+import warnings
+
 import pandas as pd
 import numpy as np
 import itertools
@@ -18,6 +20,35 @@ def split_layer_columns(df):
         group = re.match("^(.*?)[(\[]?[0-9]+[)\]]?$", col).groups()[0]
         if group not in colgroups: colgroups[group] = []
         colgroups[group].append(col)
+
+    def move_single_member_groups(colgroups,per_position_cols):
+        """
+        Catches cases where there may be a lone group with a numerical suffix that gets mistaken as a sequence of layers
+        representing values varying in depth.
+        :param colgroups:
+        :param per_position_cols:
+        :return:
+        """
+        groups_to_move = []
+        for group_name, group_list in colgroups.items():
+            if len(group_list)<2:
+                groups_to_move.append(group_name)
+        for group_name in groups_to_move:
+            per_position_cols += colgroups[group_name]
+            del colgroups[group_name]
+
+    move_single_member_groups( colgroups,per_position_cols)
+
+    def sort_by_dict_values_length(my_dict):
+        # Sorting the keys by the length of their corresponding lists in descending order
+        sorted_keys = sorted(my_dict.keys(), key=lambda k: len(my_dict[k]), reverse=True)
+
+        # Creating a new dictionary with sorted keys
+        sorted_dict = {k: my_dict[k] for k in sorted_keys}
+        return sorted_dict
+
+    colgroups = sort_by_dict_values_length(colgroups)
+
 
     def columns_to_layers(columns):
         layers = np.array([int(re.match("^.*?[(\[]?([0-9]+)[)\]]?$", col).groups()[0]) for col in columns])
@@ -67,8 +98,10 @@ def to_meshdata(tin, layer_depths, x_col="X", y_col="Y", z_col="Z"):
             id_vars=['vertex_id'],
             value_name="%s_layer" % name,
             var_name="layer_id"
-        ).drop(columns=[] if idx == 0 else ["vertex_id", "layer_id"]))
-    df = pd.concat(dfs, axis=1).astype({"layer_id": int})
+        ).drop(columns=[] if idx is 0 else ["vertex_id", "layer_id"]))
+
+    df = pd.concat(dfs, axis=1)
+    df = df.dropna(subset=["vertex_id", "layer_id"]).astype({"layer_id": int})
     
     df['layer_thickness'] = layer_thicknesses[df.layer_id.values]
     df['layer_bottom_depth'] = np.abs(layer_depths[df.layer_id.values])
@@ -144,15 +177,21 @@ def to_pyvista(tin, *arg, **kw):
         #if col == "label_layer":
          #   print('Appending point arrays label layer')
           #  m.point_arrays[col] = meshdata["point_arrays"][col]
-        if meshdata["point_arrays"][col].dtype == object:
-            continue
-        m.point_data[col] = meshdata["point_arrays"][col]
+        # if meshdata["point_arrays"][col].dtype == object:
+        #     continue
+        try:
+            m.point_data[str(col)] = meshdata["point_arrays"][col]
+        except UnicodeEncodeError:
+            warnings.warn(f'Encountered UnicodeEncodeError with {col}.Skipping...')
     for col in meshdata["cell_arrays"].columns:
         #if col == "label_layer":
          #   print('Appending cell arrays label layer')
           #  m.cell_arrays[col] = meshdata["cell_arrays"][col]
-        if meshdata["cell_arrays"][col].dtype != float:
-            #print('cell array dtype not float', col)
-            continue
-        m.cell_data[col] = meshdata["cell_arrays"][col]
+        # if meshdata["cell_arrays"][col].dtype != float:
+        #     #print('cell array dtype not float', col)
+        #     continue
+        try:
+            m.cell_data[str(col)] = meshdata["cell_arrays"][col]
+        except UnicodeEncodeError:
+            warnings.warn(f'Encountered UnicodeEncodeError with {col}.Skipping...')
     return m
