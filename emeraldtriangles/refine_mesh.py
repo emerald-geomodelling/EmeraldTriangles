@@ -25,7 +25,7 @@ def replace_triangles(points, vertices=None, triangles=None, **tri):
     points, vertices = cleanup.remove_overlapping_points_vertices(points, vertices, keep='points')
 
     points_start = len(vertices)
-    points_and_nodes = vertices.append(points).reset_index(drop=True)
+    points_and_nodes = pd.concat([vertices, points], ignore_index=True)
 
     P = points[["X", "Y"]].values
     A = vertices.loc[triangles[0].values][["X", "Y"]].values
@@ -69,8 +69,8 @@ def replace_triangles(points, vertices=None, triangles=None, **tri):
         new_faces = triangles.iloc[pd.Index([triangle]).repeat(len(triangulation.simplices))].copy()
         new_faces[0] = triangulation_point_indices[triangulation.simplices[:,0]]
         new_faces[1] = triangulation_point_indices[triangulation.simplices[:,1]]
-        new_faces[2] = triangulation_point_indices[triangulation.simplices[:,2]]        
-        all_new_faces = all_new_faces.append(new_faces)
+        new_faces[2] = triangulation_point_indices[triangulation.simplices[:,2]]
+        all_new_faces = pd.concat([all_new_faces, new_faces])
 
     res = dict(tri)
     res["vertices"] = points_and_nodes
@@ -129,10 +129,12 @@ def supplant_triangles(existing_boundary=False, **tri):
     
     if "triangles" in tri:
         triangles = tri["triangles"]
-        res["triangles"] = triangles.append(triangles.iloc[0:0].append(pd.DataFrame(res["triangles"])))
+        res["triangles"] = pd.concat([triangles, pd.DataFrame(res["triangles"])])
 
-    res["vertices"] = tri["vertices"].append(
-        pd.DataFrame(res["vertices"][len(tri["vertices"]):,:], columns=["X", "Y"]), ignore_index=True)
+    res["vertices"] = pd.concat([
+        tri["vertices"],
+        pd.DataFrame(res["vertices"][len(tri["vertices"]):,:], columns=["X", "Y"])
+    ], ignore_index=True)
 
     new_points = res["vertices"].loc[len(tri["vertices"]):].index
     if len(new_points):
@@ -145,12 +147,14 @@ def supplant_triangles(existing_boundary=False, **tri):
 
 
 def triangles_to_segments(triangles):
-    return triangles[[0, 1]].append(
-        triangles[[1, 2]].rename(columns={1:0, 2:1})).append(
-        triangles[[2, 0]].rename(columns={2:0, 0:1})).append(
-        triangles[[0, 1]].rename(columns={0:1, 1:0})).append(
-        triangles[[1, 2]].rename(columns={2:0, 1:1})).append(
-        triangles[[2, 0]].rename(columns={0:0, 2:1})).drop_duplicates().set_index(0).sort_index()
+    return pd.concat([
+        triangles[[0, 1]],
+        triangles[[1, 2]].rename(columns={1:0, 2:1}),
+        triangles[[2, 0]].rename(columns={2:0, 0:1}),
+        triangles[[0, 1]].rename(columns={0:1, 1:0}),
+        triangles[[1, 2]].rename(columns={2:0, 1:1}),
+        triangles[[2, 0]].rename(columns={0:0, 2:1}),
+    ]).drop_duplicates().set_index(0).sort_index()
 
 def interpolate_vertices(tri, to_interpolate_idxs):
     new_points = to_interpolate_idxs

@@ -54,7 +54,7 @@ def reindex(points, faces):
 def append_nodes(points, vertices, triangles):
     vertices, triangles = reindex(vertices, triangles)
     points_start = len(vertices)
-    points_and_nodes = vertices.append(points).reset_index(drop=True)
+    points_and_nodes = pd.concat([vertices, points], ignore_index=True)
     return points_and_nodes, triangles, points_start
 
 def merge_tins(a, b):

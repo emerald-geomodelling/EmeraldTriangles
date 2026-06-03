@@ -1,78 +1,57 @@
-#!/usr/bin/env python
+"""
+Minimal setup.py for Cython extension configuration.
+All metadata and dependencies are in pyproject.toml.
 
-import setuptools
+This file is only needed because the _landxml extension requires
+dynamic pkg-config configuration for libxml-2.0.
+"""
+
 import subprocess
-from setuptools import setup
-import platform
-import sys
+import setuptools
 
-include_dirs = [a for a in (a.strip() for a in subprocess.check_output(
-    ["pkg-config", "libxml-2.0", "--cflags-only-I"]).decode("utf-8").split("-I")) if a]
-library_dirs = [a for a in (a.strip() for a in subprocess.check_output(
-    ["pkg-config", "libxml-2.0", "--libs-only-L"]).decode("utf-8").split("-L")) if a]
-libraries = [a for a in (a.strip() for a in subprocess.check_output(
-    ["pkg-config", "libxml-2.0", "--libs-only-l"]).decode("utf-8").split("-l")) if a]
 
-class Extension(setuptools.Extension):
+def get_pkg_config(lib, flag):
+    """Get pkg-config flags for a library."""
+    try:
+        output = subprocess.check_output(
+            ["pkg-config", lib, flag]
+        ).decode("utf-8")
+        prefix = flag.split("-")[-1][0]  # 'I', 'L', or 'l'
+        return [a.strip() for a in output.split(f"-{prefix}") if a.strip()]
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return []
+
+
+class NumpyExtension(setuptools.Extension):
+    """Extension that defers numpy import until build time."""
+
     def __init__(self, *args, **kwargs):
-        self.__include_dirs = []
+        self._include_dirs = []
         super().__init__(*args, **kwargs)
 
     @property
     def include_dirs(self):
         import numpy
-        return self.__include_dirs + [numpy.get_include()]
+        return self._include_dirs + [numpy.get_include()]
 
     @include_dirs.setter
     def include_dirs(self, dirs):
-        self.__include_dirs = dirs
-
-install_requires = [
-        "numpy==1.24.4",
-        "pandas",
-        "scipy",
-        # Maybe make these optional?
-        "pandasio",
-        "lxml",
-        "matplotlib",
-        "shapely",
-        "geoalchemy2",
-        "pyproj",
-        "pyvista",
-        "scikit-gstat",
-        "bokeh",
-        'rasterio',
-    	'triangle'
-            ]
+        self._include_dirs = dirs
 
 
-setuptools.setup(
-    name='emeraldtriangles',
-    version='0.1.6',
-    description='Triangle mesh transforms',
-    long_description='Iteratively add points to an existing mesh, calculate mesh bounding polygons etc.',
-    long_description_content_type="text/markdown",
-    author='Egil Moeller, Craig W. Christensen, et al.',
-    author_email='em@emrld.no',
-    url='https://github.com/EMeraldGeo/EmeraldTriangles',
-    packages=setuptools.find_packages(),
+# Get libxml-2.0 configuration
+include_dirs = get_pkg_config("libxml-2.0", "--cflags-only-I")
+library_dirs = get_pkg_config("libxml-2.0", "--libs-only-L")
+libraries = get_pkg_config("libxml-2.0", "--libs-only-l")
 
-    install_requires=install_requires
+ext_modules = [
+    NumpyExtension(
+        "emeraldtriangles.io._landxml",
+        sources=["emeraldtriangles/io/_landxml.pyx"],
+        include_dirs=include_dirs,
+        library_dirs=library_dirs,
+        libraries=libraries,
+    ),
+]
 
-    ,
-    setup_requires=[
-        'setuptools>=18.0',
-        'numpy',
-        'cython',
-    ],
-    package_data={'emeraldtriangles': ['*/*.pyx', '*/*.pxd']},
-    ext_modules=[
-        Extension(
-            'emeraldtriangles.io._landxml',
-            sources=['emeraldtriangles/io/_landxml.pyx'],
-            include_dirs = include_dirs,
-            library_dirs = library_dirs,
-            libraries = libraries,
-        ),
-    ]
-)
+setuptools.setup(ext_modules=ext_modules)

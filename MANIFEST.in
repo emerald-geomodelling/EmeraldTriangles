@@ -1,2 +1,4 @@
-include *.pxd
-include *.pyx
+include LICENSE
+include README.md
+include pyproject.toml
+recursive-include emeraldtriangles *.pyx *.pxd
