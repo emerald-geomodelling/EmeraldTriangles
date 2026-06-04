@@ -191,6 +191,8 @@ def interpolate_vertices(tri, to_interpolate_idxs):
     
     res = dict(tri)
     res["vertices"] = res["vertices"].copy()
-    cols = set(interpolated.columns).intersection(set(tri["vertices"].columns)) - no_interpolation
+    # pandas >= 2.0 rejects a set as an indexer; materialize as a list. The assignment
+    # aligns by column label, so the (arbitrary but consistent) list order is fine.
+    cols = list(set(interpolated.columns).intersection(set(tri["vertices"].columns)) - no_interpolation)
     res["vertices"].loc[interpolated.index, cols] = interpolated[cols]
     return res
