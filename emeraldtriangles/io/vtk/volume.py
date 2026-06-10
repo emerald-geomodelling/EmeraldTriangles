@@ -11,13 +11,16 @@ import re
 logger = logging.getLogger(__name__)
 
 def split_layer_columns(df):
+    # Only string column labels can be per-layer ("name_0", "name_1", ...). Guard against
+    # non-string labels (e.g. a stray float/NaN column), which re.match cannot accept; these
+    # fall through to per_position_cols.
     per_layer_cols = [col for col in df.columns
-                      if re.match(r"^.*?[(\[]?[0-9]+[)\]]?$", col)]
+                      if isinstance(col, str) and re.match(r"^.*?[(\[]?[0-9]+[)\]]?$", col)]
     per_position_cols = [col for col in df.columns if not col in per_layer_cols]
 
     colgroups = {}
     for col in per_layer_cols:
-        group = re.match("^(.*?)[(\[]?[0-9]+[)\]]?$", col).groups()[0]
+        group = re.match(r"^(.*?)[(\[]?[0-9]+[)\]]?$", col).groups()[0]
         if group not in colgroups: colgroups[group] = []
         colgroups[group].append(col)
 
@@ -51,7 +54,7 @@ def split_layer_columns(df):
 
 
     def columns_to_layers(columns):
-        layers = np.array([int(re.match("^.*?[(\[]?([0-9]+)[)\]]?$", col).groups()[0]) for col in columns])
+        layers = np.array([int(re.match(r"^.*?[(\[]?([0-9]+)[)\]]?$", col).groups()[0]) for col in columns])
         layers -= np.min(layers)
         return dict(zip(columns, layers))
         
@@ -98,7 +101,7 @@ def to_meshdata(tin, layer_depths, x_col="X", y_col="Y", z_col="Z"):
             id_vars=['vertex_id'],
             value_name="%s_layer" % name,
             var_name="layer_id"
-        ).drop(columns=[] if idx is 0 else ["vertex_id", "layer_id"]))
+        ).drop(columns=[] if idx == 0 else ["vertex_id", "layer_id"]))
 
     df = pd.concat(dfs, axis=1)
     df = df.dropna(subset=["vertex_id", "layer_id"]).astype({"layer_id": int})
