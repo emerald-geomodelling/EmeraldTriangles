@@ -90,8 +90,8 @@ def read_sql(con, name, tri_id):
     triangles = pandasio.read_sql_query("select * from %s_triangles where tri_id = %%s" % name, params=(tri_id,), con=con)
     triangles_columns = pandasio.read_sql_query("select * from %s_triangles_columns where tri_id = %%s" % name, params=(tri_id,), con=con)
 
-    vertices_columns = vertices_columns.pivot("vertex_id", "column", "value")
-    triangles_columns = triangles_columns.pivot("triangle_id", "column", "value")
+    vertices_columns = vertices_columns.pivot(index="vertex_id", columns="column", values="value")
+    triangles_columns = triangles_columns.pivot(index="triangle_id", columns="column", values="value")
 
     vertices = vertices.set_index("vertex_id").sort_index().join(vertices_columns, rsuffix='_duplicate')
     triangles = triangles.set_index("triangle_id").sort_index().join(triangles_columns, rsuffix='_duplicate')
