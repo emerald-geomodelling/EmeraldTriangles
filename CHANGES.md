@@ -4,11 +4,29 @@ All notable changes to EMeraldTriangles are recorded here. This project uses
 loose [semantic versioning](https://semver.org/); the version string lives in
 `pyproject.toml`.
 
-## 0.1.8 (unreleased)
+## 0.1.9 (unreleased)
+
+Packaging fix so the project can be published to PyPI again.
+
+### Fixed
+
+- **Depend on `triangle` from PyPI instead of a Git URL.** The dependency was
+  `triangle @ git+https://github.com/drufat/triangle.git`; PyPI rejects any
+  distribution whose metadata contains a direct (`git+`) URL reference, which
+  blocked publishing. Upstream `triangle` now ships wheels for Python 3.9–3.13
+  (including cp312 on macOS arm64 / manylinux / Windows), so the plain
+  dependency resolves to the same code (currently `20250106`) without a Git
+  checkout or a source build.
+  ([#23](https://github.com/emerald-geomodelling/EmeraldTriangles/issues/23))
+
+## 0.1.8 (tagged, never published — superseded by 0.1.9)
 
 Python 3.12 / pandas 2.x / NumPy 2 compatibility fixes. This is the first
 release to carry the sampling, interpolation, and `split_layer_columns` fixes
-that landed on `master` after 0.1.7 was published to PyPI (2025-11-27).
+that landed on `master` after 0.1.7 was published to PyPI (2025-11-27). Tagged
+`2026-07-23-v.0.1.8` but not uploaded to PyPI: its `pyproject.toml` still
+carried the `triangle @ git+...` direct URL (see 0.1.9). All changes below ship
+in 0.1.9.
 
 ### Fixed
 
@@ -43,4 +61,4 @@ that landed on `master` after 0.1.7 was published to PyPI (2025-11-27).
 - Tests covering the sampling and interpolation fixes.
   ([#24](https://github.com/emerald-geomodelling/EmeraldTriangles/pull/24))
 
-[0.1.8]: https://github.com/emerald-geomodelling/EmeraldTriangles/compare/2025-03-07-v.0.1.6...master
+[0.1.9]: https://github.com/emerald-geomodelling/EmeraldTriangles/compare/2025-03-07-v.0.1.6...master
