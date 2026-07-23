@@ -9,7 +9,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "emeraldtriangles"
-version = "0.1.9"
+version = "0.1.10"
 description = "Triangle mesh transforms"
 readme = "README.md"
 license = "MIT"
