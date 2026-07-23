@@ -4,7 +4,12 @@ All notable changes to EMeraldTriangles are recorded here. This project uses
 loose [semantic versioning](https://semver.org/); the version string lives in
 `pyproject.toml`.
 
-## 0.1.9 (unreleased)
+## 0.1.10 
+
+I think I may have included an unconmmitted local change in setup.py in v.0.1.9. Specifically, include_dirs was
+garbled when I added a few character by accident. I'm pushing a new version to be absolutely sure it's correct.
+
+## 0.1.9
 
 Packaging fix so the project can be published to PyPI again.
 
