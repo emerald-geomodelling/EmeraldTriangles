@@ -13,7 +13,9 @@ loose [semantic versioning](https://semver.org/); the version string lives in
   * raise if any cell has NaN corner indices, reporting how many cells and which corners are
     affected, and naming the usual cause (per-layer columns that fail to group because their
     trailing layer index is not an integer, e.g. `res_0.0`).
-  A float-but-complete index array is cast back to int rather than rejected.
+  A float-but-complete index array is cast back to int rather than rejected, with a warning:
+  the output mesh is unaffected, but the float dtype means integer IDs were promoted somewhere
+  upstream, so the repair leaves a breadcrumb instead of hiding it.
 
 ## 0.1.10 
 

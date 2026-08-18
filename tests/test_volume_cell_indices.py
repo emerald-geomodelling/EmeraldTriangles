@@ -70,9 +70,12 @@ def test_validate_cell_indices_passes_integers_through():
     assert out is cells
 
 
-def test_validate_cell_indices_restores_complete_float_arrays():
+def test_validate_cell_indices_restores_complete_float_arrays_with_a_warning():
+    """The cast is safe (the mesh is complete), but the float dtype means integer IDs were
+    promoted somewhere upstream, so the repair must leave a breadcrumb."""
     cells = np.arange(12, dtype=float).reshape(2, 6)
-    out = _validate_cell_indices(cells, CORNER_COLS, pd.DataFrame({'res_layer': [0.0]}))
+    with pytest.warns(UserWarning, match='cast back to integer'):
+        out = _validate_cell_indices(cells, CORNER_COLS, pd.DataFrame({'res_layer': [0.0]}))
     assert np.issubdtype(out.dtype, np.integer)
     assert np.array_equal(out, cells.astype(np.int64))
 
@@ -90,5 +93,5 @@ def test_validate_cell_indices_reports_which_corners_are_missing():
 if __name__ == '__main__':
     test_integer_layer_suffixes_give_integer_cells()
     test_validate_cell_indices_passes_integers_through()
-    test_validate_cell_indices_restores_complete_float_arrays()
+    test_validate_cell_indices_restores_complete_float_arrays_with_a_warning()
     print('all ok')

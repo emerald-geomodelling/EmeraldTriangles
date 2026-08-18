@@ -86,7 +86,13 @@ def _validate_cell_indices(cell_indices, corner_cols, point_arrays):
 
     missing = pd.isna(cell_indices)
     if not missing.any():
-        # Float dtype but every corner resolved -- safe to restore the integer indices VTK needs.
+        # Float dtype but every corner resolved -- safe to restore the integer indices VTK
+        # needs, but the float dtype itself means something upstream promoted integer IDs,
+        # so leave a breadcrumb rather than repairing it silently.
+        warnings.warn(
+            'Cell corner indices arrived as floats but are complete; cast back to integer. '
+            'The output mesh is unaffected, but this suggests vertex or layer IDs were '
+            'float-promoted somewhere upstream -- worth investigating if unexpected.')
         return cell_indices.astype(np.int64)
 
     incomplete = missing.any(axis=1)
