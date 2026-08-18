@@ -4,6 +4,19 @@ All notable changes to EMeraldTriangles are recorded here. This project uses
 loose [semantic versioning](https://semver.org/); the version string lives in
 `pyproject.toml`.
 
+## Unreleased
+
+* `io.vtk.volume.to_meshdata` now validates cell-corner indices instead of returning a float
+  index array that VTK later rejects with an opaque
+  `TypeError: Indices must be either a mask or an integer array-like`. Two checks:
+  * raise if `split_layer_columns` found no per-layer column groups at all;
+  * raise if any cell has NaN corner indices, reporting how many cells and which corners are
+    affected, and naming the usual cause (per-layer columns that fail to group because their
+    trailing layer index is not an integer, e.g. `res_0.0`).
+  A float-but-complete index array is cast back to int rather than rejected, with a warning:
+  the output mesh is unaffected, but the float dtype means integer IDs were promoted somewhere
+  upstream, so the repair leaves a breadcrumb instead of hiding it.
+
 ## 0.1.10 
 
 I think I may have included an unconmmitted local change in setup.py in v.0.1.9. Specifically, include_dirs was

@@ -66,6 +66,50 @@ def split_layer_columns(df):
     return df[per_position_cols], colgroups
     
 
+def _validate_cell_indices(cell_indices, corner_cols, point_arrays):
+    """Check that every cell found all six of its corner points, and return integer indices.
+
+    The corner indices are produced by left-merging each cell corner against the melted
+    per-layer point table, so a corner whose (vertex_id, layer_id) pair is missing from that
+    table comes back as NaN -- which also promotes the whole array to float. VTK requires
+    integer indices, so an unchecked array surfaces much later as an opaque
+    ``TypeError: Indices must be either a mask or an integer array-like`` from pyvista, which
+    says nothing about the missing points. Fail here instead, naming the likely cause.
+
+    The usual cause is that the per-layer columns did not group: ``split_layer_columns``
+    matches a *trailing integer*, so columns named e.g. ``res_0.0`` (a float layer index
+    upstream) or ``label_nan`` are each treated as a single-member group and discarded,
+    leaving the melted table nearly empty.
+    """
+    if np.issubdtype(cell_indices.dtype, np.integer):
+        return cell_indices
+
+    missing = pd.isna(cell_indices)
+    if not missing.any():
+        # Float dtype but every corner resolved -- safe to restore the integer indices VTK
+        # needs, but the float dtype itself means something upstream promoted integer IDs,
+        # so leave a breadcrumb rather than repairing it silently.
+        warnings.warn(
+            'Cell corner indices arrived as floats but are complete; cast back to integer. '
+            'The output mesh is unaffected, but this suggests vertex or layer IDs were '
+            'float-promoted somewhere upstream -- worth investigating if unexpected.')
+        return cell_indices.astype(np.int64)
+
+    incomplete = missing.any(axis=1)
+    per_corner = ', '.join(f'{name}={int(n)}'
+                           for name, n in zip(corner_cols, missing.sum(axis=0)))
+    n_layer_cols = sum(1 for col in point_arrays.columns if str(col).endswith('_layer'))
+    raise ValueError(
+        f'{int(incomplete.sum())} of {len(cell_indices)} cells '
+        f'({incomplete.mean():.1%}) reference points that are missing from the melted '
+        f'per-layer table, so their corner indices are NaN (missing per corner: {per_corner}). '
+        f'The melted table has {n_layer_cols} per-layer column(s) and {len(point_arrays)} rows. '
+        'This usually means the per-layer columns of tin["vertices"] did not group: '
+        'split_layer_columns groups on a trailing integer, so names like "res_0.0" or '
+        '"res_nan" are discarded as single-member groups. Check that the layer index used to '
+        'build those column names is an integer.')
+
+
 def to_meshdata(tin, layer_depths, x_col="X", y_col="Y", z_col="Z"):
     """Layer depths is a list of offsets from z_col. Values are
     subtracted from z_col, so positive numbers mean downwards."""
@@ -93,6 +137,13 @@ def to_meshdata(tin, layer_depths, x_col="X", y_col="Y", z_col="Z"):
 
     vertices['vertex_id'] = vertices.index
     vertices, per_layer_dfs =  split_layer_columns(vertices)
+    if not per_layer_dfs:
+        raise ValueError(
+            'No per-layer columns were found on tin["vertices"], so there is no depth data to '
+            'build a volume from. split_layer_columns groups columns on a *trailing integer*, so '
+            'names like "res_0.0" (a float layer index upstream) or "res_nan" are each treated as '
+            'a single-member group and discarded. Check that the layer index used to build these '
+            'column names is an integer.')
     dfs = []
     for idx, (name, per_layer_df) in enumerate(per_layer_dfs.items()):
         dfs.append(per_layer_df.assign(
@@ -158,7 +209,8 @@ def to_meshdata(tin, layer_depths, x_col="X", y_col="Y", z_col="Z"):
     # Reformat geometry for vtk output
     
     point_coordinates = df[[x_col, y_col, 'point_z']].to_numpy()
-    cell_indices_np = df_cell[['0_3d', '1_3d', '2_3d', '3_3d', '4_3d', '5_3d']].to_numpy()
+    corner_cols = ['0_3d', '1_3d', '2_3d', '3_3d', '4_3d', '5_3d']
+    cell_indices_np = _validate_cell_indices(df_cell[corner_cols].to_numpy(), corner_cols, df)
     num_nodes = np.full((cell_indices_np.shape[0], 1), 6, dtype=np.int64)
 
     cells_out_vtk = np.concatenate( (num_nodes,cell_indices_np), axis=1)
