@@ -196,3 +196,30 @@ def interpolate_vertices(tri, to_interpolate_idxs):
     cols = list(set(interpolated.columns).intersection(set(tri["vertices"].columns)) - no_interpolation)
     res["vertices"].loc[interpolated.index, cols] = interpolated[cols]
     return res
+
+
+def points_to_tin(points, boundary=None, existing_boundary=False, x_col="X", y_col="Y"):
+    """Triangulate a table of points into a tin dict -- the usual ``replace_triangles`` + ``supplant_triangles`` pair.
+
+    ``points``: DataFrame with ``x_col``/``y_col`` (renamed to ``X``/``Y`` if needed) and any attribute columns,
+    which become vertex columns. ``boundary``: optional shapely (Multi)Polygon -- only triangles whose centroid lies
+    inside it are kept (the convex-hull triangles outside a concave footprint go). ``existing_boundary`` is passed
+    to ``supplant_triangles``. Returns the tin dict (``vertices``, ``triangles``, plus whatever the triangulation
+    added, e.g. ``segments``); combine with ``cleanup.remove_triangles_by_shape`` to drop slivers across gaps.
+    """
+    pts = points.reset_index(drop=True).copy()
+    if x_col != "X" or y_col != "Y":
+        pts = pts.rename(columns={x_col: "X", y_col: "Y"})
+    tri = {"points": pts, "vertices": pd.DataFrame({"X": [], "Y": []}),
+           "triangles": pd.DataFrame({0: [], 1: [], 2: []})}
+    tri = replace_triangles(**tri)
+    tri = supplant_triangles(existing_boundary=existing_boundary, **tri)
+    if boundary is not None:
+        import shapely
+        idx = tri["triangles"].loc[:, [0, 1, 2]].to_numpy(dtype=np.int64)
+        cx = tri["vertices"]["X"].to_numpy(dtype=float)[idx].mean(axis=1)
+        cy = tri["vertices"]["Y"].to_numpy(dtype=float)[idx].mean(axis=1)
+        inside = shapely.contains_xy(boundary, cx, cy)
+        tri["triangles"] = tri["triangles"].loc[inside].reset_index(drop=True)
+    tri.pop("points", None)
+    return tri
