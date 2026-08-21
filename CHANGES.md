@@ -4,8 +4,21 @@ All notable changes to EMeraldTriangles are recorded here. This project uses
 loose [semantic versioning](https://semver.org/); the version string lives in
 `pyproject.toml`.
 
-## Unreleased
+## 0.1.11
 
+* New geometric triangle filter (issue #33, the geometric half of #20):
+  `cleanup.triangle_metrics(vertices, triangles)` (area, perimeter, max/min side length, min angle, aspect) and
+  `cleanup.remove_triangles_by_shape(max_side_length=, max_area=, max_perimeter=, min_angle_deg=, max_aspect=, **tri)`
+  to drop the sliver triangles that `supplant_triangles` creates across concave footprints and gaps; the kept
+  triangles are re-indexed, vertices untouched (`remove_unused_vertices` afterwards if wanted).
+* `refine_mesh.points_to_tin(points, boundary=None, existing_boundary=False)` — the usual
+  `replace_triangles` + `supplant_triangles` pair for a table of points, with an optional footprint polygon (only
+  triangles whose centroid lies inside are kept).
+* `cleanup.remove_unused_vertices` no longer writes the remapped vertex ids into the caller's `triangles` /
+  `segments` frames with an in-place `.loc[:, [0, 1, 2]] = ...` (int64/float64 into int32 columns: a FutureWarning on
+  pandas 2, an error on pandas 3, #26); it now returns new frames with an `int64` dtype (float64 with NaN only if an
+  id could not be mapped). The returned dict is unchanged; callers that relied on the in-place mutation of the
+  input frames must use the return value.
 * `io.vtk.volume.to_meshdata` now validates cell-corner indices instead of returning a float
   index array that VTK later rejects with an opaque
   `TypeError: Indices must be either a mask or an integer array-like`. Two checks:

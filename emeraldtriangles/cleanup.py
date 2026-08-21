@@ -122,20 +122,24 @@ def remove_unused_vertices(**tri):
 
     new_index_mapping = dict(zip(v_subset.loc[:, index_orig_name].values, v_subset.index.values))
 
-    triangles_copy = tri['triangles'].loc[:, [0, 1, 2]].copy()
-    for col in triangles_copy.columns:
-        triangles_copy[col] = triangles_copy[col].map(new_index_mapping)
-
+    # Whole-column assignment on copies: the old ``.loc[:, [0, 1, 2]] = ...`` wrote int64 (or float64 when a key
+    # was missing) into int32 columns in place -- a FutureWarning on pandas 2 and an error on pandas 3 (#26).
+    tri['triangles'] = _remap_index_columns(tri['triangles'], [0, 1, 2], new_index_mapping)
     if 'segments' in tri.keys():
-        segments_copy = tri['segments'].loc[:, [0, 1]].copy()
-        for col in segments_copy.columns:
-            segments_copy[col] = segments_copy[col].map(new_index_mapping)
-        tri['segments'].loc[:, [0, 1]] = segments_copy
-
+        tri['segments'] = _remap_index_columns(tri['segments'], [0, 1], new_index_mapping)
     tri['vertices'] = v_subset
-    tri['triangles'].loc[:, [0, 1, 2]] = triangles_copy
 
     return tri
+
+
+def _remap_index_columns(df, columns, mapping):
+    """Return a copy of ``df`` with the vertex-id ``columns`` remapped through ``mapping`` (dtype int64 when every
+    id is known, float64 with NaN otherwise)."""
+    out = df.copy()
+    for col in columns:
+        mapped = out[col].map(mapping)
+        out[col] = mapped.astype("int64") if mapped.notna().all() else mapped.astype("float64")
+    return out
 
 def remove_invalid_triangles(points, faces):
     """
@@ -178,3 +182,82 @@ def set_case_column_names(df, columns, uppercase=True, ):
             raise ValueError(f"both uppercase and lower versions of the column {col} found in this DataFrame!")
         if function_target(col) not in df.columns:
             df.rename(columns={function_source(col): function_target(col)}, inplace=True)
+
+
+# ----------------------------------------------------------------------------------------------------------------
+# geometric quality of triangles (issue #20, #33)
+# ----------------------------------------------------------------------------------------------------------------
+
+def triangle_metrics(vertices, triangles, x_col="X", y_col="Y"):
+    """Per-triangle shape metrics as a DataFrame aligned with ``triangles``.
+
+    Columns: ``area``, ``perimeter``, ``max_side_length``, ``min_side_length``, ``min_angle_deg`` and ``aspect``
+    (longest side over the diameter of the inscribed circle; 1.73 for an equilateral triangle, large for slivers).
+    ``triangles[[0, 1, 2]]`` are taken as *positions* into ``vertices`` (the natural 0..n-1 index that
+    :func:`reindex` produces); call :func:`reindex` first if the vertex index has gaps.
+    """
+    idx = triangles.loc[:, [0, 1, 2]].to_numpy(dtype=np.int64)
+    if idx.size and (idx.min() < 0 or idx.max() >= len(vertices)):
+        raise ValueError("triangles reference vertex positions outside the vertex table; reindex() first")
+    xt = vertices[x_col].to_numpy(dtype=float)[idx]
+    yt = vertices[y_col].to_numpy(dtype=float)[idx]
+    area = 0.5 * np.abs((xt[:, 2] - xt[:, 1]) * (yt[:, 0] - yt[:, 1]) - (xt[:, 0] - xt[:, 1]) * (yt[:, 2] - yt[:, 1]))
+    # side i is opposite vertex i
+    sides = np.empty_like(xt)
+    sides[:, 0] = np.hypot(xt[:, 1] - xt[:, 2], yt[:, 1] - yt[:, 2])
+    sides[:, 1] = np.hypot(xt[:, 0] - xt[:, 2], yt[:, 0] - yt[:, 2])
+    sides[:, 2] = np.hypot(xt[:, 0] - xt[:, 1], yt[:, 0] - yt[:, 1])
+    a, b, c = sides[:, 0], sides[:, 1], sides[:, 2]
+    with np.errstate(invalid="ignore", divide="ignore"):
+        cosines = np.stack([(b ** 2 + c ** 2 - a ** 2) / (2 * b * c),
+                            (a ** 2 + c ** 2 - b ** 2) / (2 * a * c),
+                            (a ** 2 + b ** 2 - c ** 2) / (2 * a * b)], axis=1)
+        angles = np.degrees(np.arccos(np.clip(cosines, -1.0, 1.0)))
+        perimeter = sides.sum(axis=1)
+        inradius = np.where(perimeter > 0, 2.0 * area / perimeter, 0.0)      # r = area / semi-perimeter
+        aspect = np.where(inradius > 0, sides.max(axis=1) / (2.0 * inradius), np.inf)
+    return pd.DataFrame({"area": area, "perimeter": perimeter, "max_side_length": sides.max(axis=1),
+                         "min_side_length": sides.min(axis=1), "min_angle_deg": np.nanmin(angles, axis=1),
+                         "aspect": aspect}, index=triangles.index)
+
+
+def remove_triangles_by_shape(*, max_side_length=None, max_area=None, max_perimeter=None, min_angle_deg=None,
+                              max_aspect=None, keep_metrics=False, x_col="X", y_col="Y", **tri):
+    """Drop triangles that fail any of the given shape criteria; return a new tri dict.
+
+    Typical use: after ``supplant_triangles(existing_boundary=False)`` the mesh reaches out to the convex hull of the
+    vertices, so concave footprints and interior gaps are spanned by long, thin triangles. For vertices on a regular
+    lattice with spacing ``dx, dy`` the legitimate triangles have ``max_side_length <= hypot(dx, dy)`` and
+    ``area <= dx*dy/2``; thresholds a few percent above those remove exactly the spanning triangles.
+
+    Parameters
+    ----------
+    max_side_length, max_area, max_perimeter : float, optional -- upper bounds
+    min_angle_deg : float, optional -- smallest internal angle allowed (slivers have tiny angles)
+    max_aspect : float, optional -- upper bound on ``max_side_length / (2 * inradius)``
+    keep_metrics : bool -- append the metric columns to the returned ``triangles``
+    **tri : the tin dict (``vertices``, ``triangles``, and anything else, which is passed through)
+
+    Triangles are re-indexed to 0..n-1; vertices are untouched (use :func:`remove_unused_vertices` afterwards to
+    drop vertices that no triangle references).
+    """
+    vertices, triangles = tri["vertices"], tri["triangles"]
+    m = triangle_metrics(vertices, triangles, x_col=x_col, y_col=y_col)
+    keep = np.ones(len(triangles), dtype=bool)
+    if max_side_length is not None:
+        keep &= m["max_side_length"].to_numpy() <= max_side_length
+    if max_area is not None:
+        keep &= m["area"].to_numpy() <= max_area
+    if max_perimeter is not None:
+        keep &= m["perimeter"].to_numpy() <= max_perimeter
+    if min_angle_deg is not None:
+        keep &= m["min_angle_deg"].to_numpy() >= min_angle_deg
+    if max_aspect is not None:
+        keep &= m["aspect"].to_numpy() <= max_aspect
+    out = dict(tri)
+    kept = triangles.loc[keep]
+    if keep_metrics:
+        kept = pd.concat([kept, m.loc[keep]], axis=1)
+    out["triangles"] = kept.reset_index(drop=True)
+    out["n_triangles_removed"] = int((~keep).sum())
+    return out
