@@ -4,7 +4,7 @@ All notable changes to EMeraldTriangles are recorded here. This project uses
 loose [semantic versioning](https://semver.org/); the version string lives in
 `pyproject.toml`.
 
-## Unreleased
+## 0.1.11
 
 * New geometric triangle filter (issue #33, the geometric half of #20):
   `cleanup.triangle_metrics(vertices, triangles)` (area, perimeter, max/min side length, min angle, aspect) and
