@@ -51,6 +51,38 @@ def reindex(points, faces):
     points = points.rename_axis(index=index_name)
     return points, faces
 
+#: bookkeeping columns the cleanup helpers leave behind on the vertex table
+INDEX_COLUMNS = ["vertex_id_orig", "index_orig", "index"]
+
+
+def cleanup_tin(tin):
+    """Run the clean-up sequence a vertex filter almost always needs afterwards.
+
+    ``remove_invalid_triangles`` -> ``remove_unused_vertices`` -> :func:`reindex`, dropping the
+    bookkeeping columns those helpers leave on the vertex table (:data:`INDEX_COLUMNS`) and
+    restoring the triangle corner columns to ``int64`` -- filtering leaves them ``float64``, which
+    then breaks anything that indexes with them.
+
+    Modifies and returns ``tin`` (a dict with at least ``vertices`` and ``triangles``); any other
+    keys are passed through.
+
+    Existing callers in the EMerald stack deliberately still run their own variants of this
+    sequence: they differ (an extra ``vertex_id`` reindex, a preceding ``dropna``, or stopping
+    before ``reindex``), so this is offered to new callers rather than imposed on them.
+    """
+    _drop_index_columns(tin["vertices"])
+    tin["vertices"], tin["triangles"] = remove_invalid_triangles(tin["vertices"], tin["triangles"])
+    tin = remove_unused_vertices(**tin)
+    tin["vertices"], tin["triangles"] = reindex(tin["vertices"], tin["triangles"])
+    _drop_index_columns(tin["vertices"])
+    tin["triangles"][[0, 1, 2]] = tin["triangles"][[0, 1, 2]].astype("int64")
+    return tin
+
+
+def _drop_index_columns(df):
+    df.drop(columns=INDEX_COLUMNS, errors="ignore", inplace=True)
+
+
 def append_nodes(points, vertices, triangles):
     vertices, triangles = reindex(vertices, triangles)
     points_start = len(vertices)
