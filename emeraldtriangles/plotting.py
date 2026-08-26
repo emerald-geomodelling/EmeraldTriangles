@@ -7,8 +7,24 @@ import matplotlib.colors
 # Yeah, module is shadowed by the function...
 plotmod = sys.modules["triangle.plot"]
 
+def _xy_columns(df):
+    """The vertex coordinate column names, whichever convention the caller uses.
+
+    Some loaders rename ``x, y`` -> ``X, Y`` and some do not, so both are accepted; uppercase wins
+    when a frame somehow carries both.
+    """
+    if "X" in df.columns and "Y" in df.columns:
+        return "X", "Y"
+    if "x" in df.columns and "y" in df.columns:
+        return "x", "y"
+    raise KeyError(
+        "vertex table has neither X/Y nor x/y coordinate columns; got %s"
+        % (list(df.columns)[:20],))
+
+
 def triangles(ax, vertices, triangles, zorder=-1, edgecolors="red", facecolors="green", cmap="viridis", **kw):
-    args = [vertices["X"], vertices["Y"], triangles[[0, 1, 2]]]
+    xc, yc = _xy_columns(vertices)
+    args = [vertices[xc], vertices[yc], triangles[[0, 1, 2]]]
     kwargs = {"zorder": zorder, "edgecolors": edgecolors, "cmap": cmap}
     kwargs.update(kw.get("triangles_args", {}))
     if "facecolors" in triangles.columns:
@@ -22,7 +38,8 @@ def triangles(ax, vertices, triangles, zorder=-1, edgecolors="red", facecolors="
     ax.tripcolor(*args, **kwargs)
 
 def vertices(ax, **kw):
-    verts = kw['vertices'][["X", "Y"]].values
+    xc, yc = _xy_columns(kw['vertices'])
+    verts = kw['vertices'][[xc, yc]].values
 
     args = {}
     args.update(kw.get("vertices_args", {}))
@@ -31,7 +48,7 @@ def vertices(ax, **kw):
     else:
         args["c"] = np.zeros(len(kw['vertices']))
 
-    ax.scatter(kw['vertices']["X"], kw['vertices']["Y"], **args)
+    ax.scatter(kw['vertices'][xc], kw['vertices'][yc], **args)
     if 'labels' in kw:
         for i in range(verts.shape[0]):
             ax.text(verts[i, 0], verts[i, 1], str(i))
@@ -41,7 +58,8 @@ def vertices(ax, **kw):
             ax.text(verts[i, 0], verts[i, 1], str(vm[i]))
 
 def points(ax, **kw):
-    verts = kw['points'][["X", "Y"]].values
+    xc, yc = _xy_columns(kw['points'])
+    verts = kw['points'][[xc, yc]].values
 
     args = {}
     args.update(kw.get("points_args", {}))
@@ -50,7 +68,7 @@ def points(ax, **kw):
     else:
         args["c"] = np.zeros(len(kw['points']))
 
-    ax.scatter(kw['points']["X"], kw['points']["Y"], cmap="spring", **args)
+    ax.scatter(kw['points'][xc], kw['points'][yc], cmap="spring", **args)
 
             
 def plot(ax, **kw):
@@ -58,7 +76,7 @@ def plot(ax, **kw):
     if isinstance(kw.get("triangles"), pd.core.frame.DataFrame):
         kw["triangles"] = kw["triangles"][[0, 1, 2]].values
     if isinstance(kw.get("vertices"), pd.core.frame.DataFrame):
-        kw["vertices"] = kw["vertices"][["X", "Y"]].values
+        kw["vertices"] = kw["vertices"][list(_xy_columns(kw["vertices"]))].values
     if isinstance(kw.get("segments"), pd.core.frame.DataFrame):
         kw["segments"] = kw["segments"][[0, 1]].values
     
