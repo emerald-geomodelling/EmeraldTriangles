@@ -4,7 +4,7 @@ All notable changes to EMeraldTriangles are recorded here. This project uses
 loose [semantic versioning](https://semver.org/); the version string lives in
 `pyproject.toml`.
 
-## 0.1.11
+## [0.1.11]
 
 * New geometric triangle filter (issue #33, the geometric half of #20):
   `cleanup.triangle_metrics(vertices, triangles)` (area, perimeter, max/min side length, min angle, aspect) and
@@ -14,6 +14,16 @@ loose [semantic versioning](https://semver.org/); the version string lives in
 * `refine_mesh.points_to_tin(points, boundary=None, existing_boundary=False)` — the usual
   `replace_triangles` + `supplant_triangles` pair for a table of points, with an optional footprint polygon (only
   triangles whose centroid lies inside are kept).
+* `cleanup.cleanup_tin(tin)` — the clean-up sequence a vertex filter almost always needs afterwards
+  (`remove_invalid_triangles` -> `remove_unused_vertices` -> `reindex`), which additionally drops the
+  bookkeeping columns those helpers leave on the vertex table (`index`, `index_orig`, `vertex_id_orig`,
+  exposed as `cleanup.INDEX_COLUMNS`) and restores the triangle corner columns to `int64` — filtering
+  leaves them `float64`, which then breaks anything that indexes with them. Existing call sites in the
+  EMerald stack are deliberately **not** migrated onto it: they run variants of this sequence (an extra
+  `vertex_id` reindex, a preceding `dropna`, or stopping before `reindex`), so folding them into one
+  composite would change behaviour at each site. It is offered to new callers; existing ones can adopt it
+  individually, each with its own check. Verified to reproduce the implementation it generalises, over
+  three random meshes. (#36)
 * `cleanup.remove_unused_vertices` no longer writes the remapped vertex ids into the caller's `triangles` /
   `segments` frames with an in-place `.loc[:, [0, 1, 2]] = ...` (int64/float64 into int32 columns: a FutureWarning on
   pandas 2, an error on pandas 3, #26); it now returns new frames with an `int64` dtype (float64 with NaN only if an
@@ -30,12 +40,18 @@ loose [semantic versioning](https://semver.org/); the version string lives in
   the output mesh is unaffected, but the float dtype means integer IDs were promoted somewhere
   upstream, so the repair leaves a breadcrumb instead of hiding it.
 
-## 0.1.10 
+* `plotting` now accepts lowercase `x`/`y` vertex columns. `triangles`, `vertices`, `points` and `plot`
+  hard-coded `"X"`/`"Y"` and raised `KeyError` on a tin using the lowercase convention, which some loaders
+  produce and others do not. A shared column resolver now accepts either, prefers uppercase if a frame
+  somehow carries both, and otherwise raises an error naming the columns it did find instead of a bare
+  `KeyError: 'X'`. (#36)
+
+## [0.1.10]
 
 I think I may have included an unconmmitted local change in setup.py in v.0.1.9. Specifically, include_dirs was
 garbled when I added a few character by accident. I'm pushing a new version to be absolutely sure it's correct.
 
-## 0.1.9
+## [0.1.9]
 
 Packaging fix so the project can be published to PyPI again.
 
@@ -92,4 +108,6 @@ in 0.1.9.
 - Tests covering the sampling and interpolation fixes.
   ([#24](https://github.com/emerald-geomodelling/EmeraldTriangles/pull/24))
 
-[0.1.9]: https://github.com/emerald-geomodelling/EmeraldTriangles/compare/2025-03-07-v.0.1.6...master
+[0.1.11]: https://github.com/emerald-geomodelling/EmeraldTriangles/compare/2026-07-23-v.0.1.10...2026-08-27-v.0.1.11
+[0.1.10]: https://github.com/emerald-geomodelling/EmeraldTriangles/compare/2026-07-23-v.0.1.9...2026-07-23-v.0.1.10
+[0.1.9]: https://github.com/emerald-geomodelling/EmeraldTriangles/compare/2026-07-23-v.0.1.8...2026-07-23-v.0.1.9
